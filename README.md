@@ -138,7 +138,7 @@ Work is tracked on our [GitHub Project board](../../projects) with the columns *
    **When** I enter 0 and click Save,
    **Then** I should see "Goal must be at least 1 book."
 
-### 5. Use Another Team's Service
+<!--### 5. Use Another Team's Service
 
 **As a reader, I want to see [information from the other team's service] on a book's page so that I can [benefit to the reader].**
 
@@ -152,7 +152,7 @@ Work is tracked on our [GitHub Project board](../../projects) with the columns *
    **When** I open the Book Details page for "The Hobbit",
    **Then** the page should still load, without that section.
 
----
+--->
 
 ## Data Sources
 
