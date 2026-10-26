@@ -62,7 +62,7 @@ Work is tracked on our [GitHub Project board](../../projects) with the columns *
 
 | Sprint | Epic | Goal |
 |---|---|---|
-| Week 1 | Setup & Book Search | Repo, design document, database, search with Google Books |
+| Week 1 | Design, Setup & Book Search | Storyboard and design document first, then repo setup, database, Google Books search, Search page |
 | Week 2 | Reading List & Reviews | My List, status, ratings and reviews, Open Library backup |
 | Week 3 | Reading Goal, Partner Service & Demo | Reading goal, partner team's service, tests, final demo |
 
@@ -212,4 +212,4 @@ A small SQLite database stores the reading list and goal.
 
 ### Weekly Meeting
 
-**Mondays, 4:00–4:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the Jira Project board.
+**Sundays, 7:00–7:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the GitHub Project board.
