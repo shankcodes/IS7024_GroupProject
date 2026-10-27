@@ -37,7 +37,7 @@ Built with **C# / ASP.NET Core** in **Visual Studio 2026**.
 
 ## Icon / Logo
 
-<img src="images/booknest-logo.svg" alt="BookNest logo" width="100">
+<img src="images/BookNest_Logo.png" alt="BookNest logo" width="100">
 
 An open book resting in a nest: a cozy home for your reading list.
 
