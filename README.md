@@ -56,7 +56,7 @@ An open book resting in a nest: a cozy home for your reading list.
 
 ## Projects
 
-Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian.net/jira/software/projects/BN/boards/1/backlog) with the columns **To Do → In Progress → Done**.
+Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian.net/jira/software/projects/BN/boards/1/backlog) with the columns **To Do → In Progress → Peer Review → Ready to Deploy → Done**.
 
 | Sprint | Epic | Goal |
 |---|---|---|
