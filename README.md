@@ -45,8 +45,6 @@ An open book resting in a nest: a cozy home for your reading list.
 
 ## Storyboard
 
-![BookNest Storyboard](images/storyboard.png)
-
 | Screen | Widgets |
 |---|---|
 | **Home** | Reading goal progress bar, *Reading* list, link to Search |
