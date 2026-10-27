@@ -160,7 +160,7 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 |---|---|---|
 | [Google Books API](https://developers.google.com/books/docs/v1/using) | `https://www.googleapis.com/books/v1/volumes?q=the+hobbit` | Main book search (RESTful JSON) |
 | [Open Library API](https://openlibrary.org/developers/api) | `https://openlibrary.org/search.json?q=the+hobbit` | Backup search and missing covers (RESTful JSON) |
-| [Other team's service] | [Their JSON endpoint] | [What we use it for] |
+<!--| [Other team's service] | [Their JSON endpoint] | [What we use it for] |-->
 
 ---
 
