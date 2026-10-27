@@ -1,9 +1,9 @@
-<p align="center">
+<p align="left">
   <img src="images/booknest-logo.svg" alt="BookNest logo" width="150">
 </p>
 
-<h1 align="center">BookNest</h1>
-<p align="center"><em>Discover books, organize your reading list, and track your reading goals.</em></p>
+<h1 align="left">BookNest</h1>
+<p align="left"><em>Discover books, organize your reading list, and track your reading goals.</em></p>
 
 ---
 
