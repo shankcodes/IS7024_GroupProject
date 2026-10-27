@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="./images/BookNest_logo.png" alt="BookNest logo" width="150">
+  <img src="./images/BookNest_logo.png" alt="BookNest logo" width="250">
 </p>
 
 <h1 align="left">BookNest</h1>
@@ -37,7 +37,7 @@ Built with **C# / ASP.NET Core** in **Visual Studio 2026**.
 
 ## Icon / Logo
 
-<img src="images/BookNest_logo.png" alt="BookNest logo" width="100">
+<img src="images/BookNest_logo.png" alt="BookNest logo" width="150">
 
 An open book resting in a nest: a cozy home for your reading list.
 
