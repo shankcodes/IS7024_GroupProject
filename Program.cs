@@ -1,7 +1,10 @@
+using IS7024_GroupProject.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSingleton<ShortcutEntryStore>();
 
 var app = builder.Build();
 

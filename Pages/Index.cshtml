@@ -1,10 +1,87 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Keyboard Shortcut Survey";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="py-4">
+    <h1>Keyboard Shortcut Survey</h1>
+    <p class="lead">Share your favorite keyboard shortcut and see what others use.</p>
+
+    <form method="post" class="row g-3 mb-5">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="col-md-6">
+            <label asp-for="Input.FirstName" class="form-label"></label>
+            <input asp-for="Input.FirstName" class="form-control" />
+            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Input.LastName" class="form-label"></label>
+            <input asp-for="Input.LastName" class="form-control" />
+            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Input.Major" class="form-label"></label>
+            <input asp-for="Input.Major" class="form-control" />
+            <span asp-validation-for="Input.Major" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="Input.FavoriteKeyboardShortcut" class="form-label"></label>
+            <input asp-for="Input.FavoriteKeyboardShortcut" class="form-control" placeholder="Example: Ctrl + C" />
+            <span asp-validation-for="Input.FavoriteKeyboardShortcut" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <label asp-for="Input.ShortcutUsage" class="form-label"></label>
+            <textarea asp-for="Input.ShortcutUsage" class="form-control" rows="3"
+                      placeholder="Example: Copying text in documents and web pages"></textarea>
+            <span asp-validation-for="Input.ShortcutUsage" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Submit response</button>
+            <a asp-page="/Feed" class="btn btn-outline-secondary">View JSON feed</a>
+        </div>
+    </form>
+
+    <h2>Submitted responses</h2>
+
+    @if (Model.Entries.Count == 0)
+    {
+        <p>No responses have been submitted yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Major</th>
+                        <th>Favorite shortcut</th>
+                        <th>Where it can be used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.Entries)
+                    {
+                        <tr>
+                            <td>@entry.FirstName @entry.LastName</td>
+                            <td>@entry.Major</td>
+                            <td><kbd>@entry.FavoriteKeyboardShortcut</kbd></td>
+                            <td>@entry.ShortcutUsage</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
