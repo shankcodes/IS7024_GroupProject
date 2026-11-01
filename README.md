@@ -15,8 +15,9 @@
 4. [Projects](#projects)
 5. [Requirements](#requirements)
 6. [Data Sources](#data-sources)
-7. [Database](#database)
-8. [Team Composition](#team-composition)
+7. [Authentication and Authorization](#authentication-and-authorization)
+8. [Database](#database)
+9. [Team Composition](#team-composition)
 
 ---
 
@@ -162,6 +163,18 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 
 ---
 
+## Authentication and Authorization
+
+BookNest uses ASP.NET Core Identity with integer user IDs. Identity provides password hashing, login, logout, account management, and role support. Email addresses must be unique.
+
+Reading lists, reading goals, reviews, comments, and likes are associated with the authenticated user's ID. User-owned queries and page handlers must filter by that ID so one user cannot access or change another user's data.
+
+The `Admin` role is seeded for application-level moderation features. Admin access should be limited to explicit moderation and management pages using role-based authorization such as `[Authorize(Roles = "Admin")]`. The Admin role does not provide unrestricted access to the SQLite database.
+
+Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup, and the Admin role is created if it does not already exist. No administrator account or password is stored in source code.
+
+---
+
 ## Database
 
 A small SQLite database stores the reading list and goal.
@@ -181,20 +194,36 @@ A small SQLite database stores the reading list and goal.
 | Field | Type | Notes |
 |---|---|---|
 | ReadingListId | int | Primary key |
+| UserId | int | Foreign key -> Users |
 | BookId | int | Foreign key → Books |
 | Status | text | WantToRead, Reading, Finished |
+| FinishedDate | date | Nullable |
+
+**BookReviews**
+
+| Field | Type | Notes |
+|---|---|---|
+| BookReviewId | int | Primary key |
+| UserId | int | Foreign key -> Users |
+| BookId | int | Foreign key -> Books |
 | Rating | int | 1–5, nullable |
 | Review | text | Nullable |
-| FinishedDate | date | Nullable |
+| CreatedAt | datetime | When the review was created |
+| UpdatedAt | datetime | Nullable |
+
+Each user can have at most one review for a book. Aggregate book ratings are calculated from the reviews.
+
+Reviews also support a short summary, moderation status, moderation reason, comments, and likes. A user can like a review at most once. Comments are stored separately so they can be moderated and extended without changing the review record.
 
 **ReadingGoal**
 
 | Field | Type | Notes |
 |---|---|---|
-| Year | int | Primary key |
+| UserId | int | Part of composite primary key; foreign key -> Users |
+| Year | int | Part of composite primary key |
 | TargetBooks | int | At least 1 |
 
-**Relationships:** Each book has one ReadingList entry. The reading goal counts the ReadingList entries marked *Finished* in that year.
+**Relationships:** Each user can have one ReadingList entry per book and one ReadingGoal per year. The reading goal counts that user's ReadingList entries marked *Finished* in that year.
 
 ---
 

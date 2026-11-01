@@ -1,0 +1,40 @@
+@page
+@model ReadingListModel
+@{
+    ViewData["Title"] = "My Reading List";
+}
+
+<h1>My Reading List</h1>
+
+<form method="post" class="mb-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3">
+        <label asp-for="Input.Title" class="form-label"></label>
+        <input asp-for="Input.Title" class="form-control" />
+        <span asp-validation-for="Input.Title" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Input.Author" class="form-label"></label>
+        <input asp-for="Input.Author" class="form-control" />
+        <span asp-validation-for="Input.Author" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Input.GoogleBooksId" class="form-label"></label>
+        <input asp-for="Input.GoogleBooksId" class="form-control" />
+        <span asp-validation-for="Input.GoogleBooksId" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Add to list</button>
+</form>
+
+<h2>Books</h2>
+
+<ul>
+@foreach (var entry in Model.Entries)
+{
+    <li>@entry.Book.Title by @entry.Book.Author (@entry.Status)</li>
+}
+</ul>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
