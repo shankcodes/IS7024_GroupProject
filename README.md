@@ -173,7 +173,7 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 
 ---
 
-## Authentication and Authorization
+<!--## Authentication and Authorization
 
 BookNest uses ASP.NET Core Identity with integer user IDs. Identity provides password hashing, login, logout, account management, and role support. Email addresses must be unique.
 
@@ -181,7 +181,7 @@ Reading lists, reading goals, reviews, comments, and likes are associated with t
 
 The `Admin` role is seeded for application-level moderation features. Admin access should be limited to explicit moderation and management pages using role-based authorization such as `[Authorize(Roles = "Admin")]`. The Admin role does not provide unrestricted access to the SQLite database.
 
-Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup, and the Admin role is created if it does not already exist. No administrator account or password is stored in source code.
+Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup, and the Admin role is created if it does not already exist. No administrator account or password is stored in source code.-->
 
 ---
 
