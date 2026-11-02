@@ -15,8 +15,9 @@
 4. [Projects](#projects)
 5. [Requirements](#requirements)
 6. [Data Sources](#data-sources)
-7. [Database](#database)
-8. [Team Composition](#team-composition)
+7. [Authentication and Authorization](#authentication-and-authorization)
+8. [Database](#database)
+9. [Team Composition](#team-composition)
 
 ---
 
@@ -72,69 +73,77 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 
 **As a reader, I want to search for books by title or author so that I can find books to add to my list.**
 
-1. **Given** Google Books is available,
-   **When** I search for "The Hobbit",
+1. **Given** Google Books is available and contains "The Hobbit" by J.R.R. Tolkien (ISBN 9780547928227),
+   **When** I search for "The Hobbit" on the Home page,
    **Then** I should see "The Hobbit" by J.R.R. Tolkien in the results.
 
-2. **Given** Google Books is available,
+2. **Given** Google Books is available and contains "The Martian" and "Project Hail Mary" by Andy Weir,
    **When** I search for "Andy Weir",
-   **Then** I should see "The Martian" in the results.
+   **Then** I should see both "The Martian" and "Project Hail Mary" in the results.
+   
+3. **Given** I am on the Home page and the search box is empty,
+   **When** I click Search,
+   **Then** I should see "Please enter a title or author." and no API call should be made.
 
-3. **Given** I am on the Search page,
-   **When** I click Search with an empty search box,
-   **Then** I should see "Please enter a title or author."
-
-4. **Given** Google Books is available,
+4. **Given** Google Books is available and has no book matching "xqzvplmnt",
    **When** I search for "xqzvplmnt",
    **Then** I should see "No books found."
+
+5. **Given** Google Books returns "Dune" by Frank Herbert (ISBN 9780441172719) without a cover image, and Open Library has a cover for ISBN 9780441172719,
+   **When** I search for "Dune",
+   **Then** I should see one "Dune" result that shows the Open Library cover.
 
 ### 2. Manage My Reading List
 
 **As a reader, I want to mark books as Want to Read, Reading, or Finished so that I can keep track of what I am reading.**
 
-1. **Given** "The Martian" is not on my list,
-   **When** I click *Add to List*,
+1. **Given** I am signed in and "The Martian" (ISBN 9780553418026) is not on my list,
+   **When** I click *Add to List* on its search result,
    **Then** "The Martian" should appear on my list as *Want to Read*.
-
-2. **Given** "The Martian" is on my list as *Want to Read*,
+   
+2. **Given** I am signed in and "The Martian" is on my list as *Want to Read*,
    **When** I change its status to *Reading*,
-   **Then** "The Martian" should show as *Reading*.
-
-3. **Given** "The Martian" is already on my list,
-   **When** I click *Add to List* again,
+   **Then** "The Martian" should show as *Reading* and appear in *Currently Reading* on the Home page.
+   
+3. **Given** I am signed in and "The Martian" is already on my list as *Want to Read*,
+   **When** I click *Add to List* on "The Martian" again,
    **Then** I should see "This book is already on your list." and only one copy should exist.
 
 ### 3. Rate and Review Books
 
 **As a reader, I want to rate and review books I finish so that I can remember what I thought of them.**
 
-1. **Given** "The Hobbit" is on my list as *Finished*,
-   **When** I select 4 stars, type "Fun adventure," and click Save,
-   **Then** "The Hobbit" should show 4 stars and the review "Fun adventure."
-
-2. **Given** "The Hobbit" has a 4-star rating,
-   **When** I change it to 5 stars and click Save,
-   **Then** "The Hobbit" should show 5 stars.
-
-3. **Given** "The Martian" is on my list as *Want to Read*,
+1. **Given** I am signed in, "The Hobbit" is on my list as *Finished*, and I have not reviewed it,
+   **When** I select 4 stars, type the summary "Fun adventure" and the comment "Bilbo's journey kept me hooked," and click Save,
+   **Then** "The Hobbit" should show my 4-star rating and my review.
+   
+2. **Given** I am signed in and I gave "The Hobbit" 4 stars,
+   **When** I change my rating to 5 stars and click Save,
+   **Then** "The Hobbit" should show my 5-star rating, and I should still have only one review for it.
+   
+3. **Given** reader Alex rated "The Hobbit" 4 stars and reader Sam rated it 5 stars,
+   **When** I open the Book Details page for "The Hobbit",
+   **Then** I should see "Average rating: 4.5 (2 ratings)."
+   
+4. **Given** I am signed in and "The Martian" is on my list as *Want to Read*,
    **When** I open its Book Details page,
-   **Then** the rating and review box should be disabled with the message "Finish this book to rate it."
+   **Then** my rating and review boxes should be disabled with the message "Finish this book to rate it."
 
 ### 4. Set a Reading Goal
 
 **As a reader, I want to set a yearly reading goal so that I can stay motivated to read.**
 
-1. **Given** I have no goal for 2026,
+1. **Given** I am signed in and have no reading goal for 2026,
    **When** I set a goal of 12 books,
    **Then** the Home page should show "0 of 12 books read in 2026."
-
-2. **Given** my 2026 goal is 12 books and I have finished 3 books,
-   **When** I mark "The Hobbit" as *Finished*,
+   
+2. **Given** I am signed in, my 2026 goal is 12 books, and I have finished 3 books in 2026,
+   **When** I mark "The Hobbit" as *Finished* on November 1, 2026,
    **Then** the Home page should show "4 of 12 books read in 2026."
-
-3. **Given** I am setting my reading goal,
+   
+3. **Given** I am signed in and on the reading goal form,
    **When** I enter 0 and click Save,
-   **Then** I should see "Goal must be at least 1 book."
+   **Then** I should see "Goal must be at least 1 book." and my goal should not change.
 
 <!--### 5. Use Another Team's Service
 
@@ -154,48 +163,106 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 
 ## Data Sources
 
-| Source | Example | Used For |
-|---|---|---|
-| [Google Books API](https://developers.google.com/books/docs/v1/using) | `https://www.googleapis.com/books/v1/volumes?q=the+hobbit` | Main book search (RESTful JSON) |
-| [Open Library API](https://openlibrary.org/developers/api) | `https://openlibrary.org/search.json?q=the+hobbit` | Backup search and missing covers (RESTful JSON) |
+| Source | Example | Used For | Match Key |
+|---|---|---|---|
+| [Google Books API](https://developers.google.com/books/docs/v1/using) | `https://www.googleapis.com/books/v1/volumes?q=the+hobbit` | Main book search (RESTful JSON) | ISBN-13 from `volumeInfo.industryIdentifiers` |
+| [Open Library API](https://openlibrary.org/developers/api) | `https://openlibrary.org/isbn/9780547928227.json` | Backup search and missing covers (RESTful JSON) | ISBN-13 in the URL, or the `isbn` field in `search.json` results |
+ 
+**How we combine them:** Both APIs identify a book by its **ISBN-13**. When Google Books returns a book, we use its ISBN-13 to look up the same book in Open Library and fill in anything missing, such as the cover. Each book is saved once in our `Books` table, keyed by its unique ISBN-13. If a result has no ISBN-13, we use its ISBN-10.
 <!--| [Other team's service] | [Their JSON endpoint] | [What we use it for] |-->
 
 ---
 
+## Authentication and Authorization
+
+BookNest uses ASP.NET Core Identity with integer user IDs. Identity provides password hashing, login, logout, account management, and role support. Email addresses must be unique.
+
+Reading lists, reading goals, reviews, comments, and likes are associated with the authenticated user's ID. User-owned queries and page handlers must filter by that ID so one user cannot access or change another user's data.
+
+The `Admin` role is seeded for application-level moderation features. Admin access should be limited to explicit moderation and management pages using role-based authorization such as `[Authorize(Roles = "Admin")]`. The Admin role does not provide unrestricted access to the SQLite database.
+
+Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup, and the Admin role is created if it does not already exist. No administrator account or password is stored in source code.
+
+---
+
 ## Database
-
-A small SQLite database stores the reading list and goal.
-
+ 
+A small SQLite database, built with Entity Framework Core, stores books, each reader's reading list, reviews, and goals. Ratings and reviews are stored per book, so BookNest can show the average rating from all readers. Over time, this builds BookNest's own collection of reader reviews.
+ 
+**Naming conventions** (standard C# and Entity Framework Core):
+ 
+- Entity classes are singular (`Book`); tables are plural (`Books`).
+- Columns are PascalCase. Acronyms longer than two letters are written as words (`Isbn13`, not `ISBN13`).
+- Every table has a primary key named `<Entity>Id`, and foreign keys use the same name as the key they point to (`BookId` → `Books.BookId`).
+- Date-only columns end in `Date`; date-and-time columns end in `At`.
+**Users**
+ 
+| Column | Type | Notes |
+|---|---|---|
+| UserId | int | Primary key |
+| UserName | string | Unique |
+| Email | string | Unique |
+| CreatedAt | DateTime | |
+ 
 **Books**
-
-| Field | Type | Notes |
+ 
+| Column | Type | Notes |
 |---|---|---|
 | BookId | int | Primary key |
-| Title | text | |
-| Author | text | |
-| CoverUrl | text | |
-| GoogleBooksId | text | Unique, so a book is not saved twice |
-
-**ReadingList**
-
-| Field | Type | Notes |
+| Isbn13 | string | Unique; the key shared by Google Books and Open Library |
+| Title | string | |
+| Author | string | |
+| Description | string? | |
+| CoverUrl | string? | From Google Books, or from Open Library if Google Books has none |
+| GoogleBooksId | string? | |
+| OpenLibraryKey | string? | |
+ 
+**ReadingListItems**
+ 
+| Column | Type | Notes |
 |---|---|---|
-| ReadingListId | int | Primary key |
+| ReadingListItemId | int | Primary key |
+| UserId | int | Foreign key → Users |
 | BookId | int | Foreign key → Books |
-| Status | text | WantToRead, Reading, Finished |
-| Rating | int | 1–5, nullable |
-| Review | text | Nullable |
-| FinishedDate | date | Nullable |
-
-**ReadingGoal**
-
-| Field | Type | Notes |
+| Status | ReadingStatus | Enum: WantToRead, Reading, Finished |
+| AddedAt | DateTime | |
+| FinishedDate | DateOnly? | Set when Status changes to Finished |
+ 
+*(UserId, BookId) is unique, so a reader can't add the same book twice.*
+ 
+**Reviews**
+ 
+| Column | Type | Notes |
 |---|---|---|
-| Year | int | Primary key |
-| TargetBooks | int | At least 1 |
-
-**Relationships:** Each book has one ReadingList entry. The reading goal counts the ReadingList entries marked *Finished* in that year.
-
+| ReviewId | int | Primary key |
+| BookId | int | Foreign key → Books |
+| UserId | int | Foreign key → Users |
+| Rating | int | 1–5, required |
+| Summary | string? | Short headline, up to 100 characters |
+| Comment | string? | Up to 2,000 characters |
+| CreatedAt | DateTime | |
+| UpdatedAt | DateTime? | Set when the reader edits the review |
+ 
+*(UserId, BookId) is unique, so each reader has one review per book.*
+ 
+**ReadingGoals**
+ 
+| Column | Type | Notes |
+|---|---|---|
+| ReadingGoalId | int | Primary key |
+| UserId | int | Foreign key → Users |
+| Year | int | |
+| TargetBookCount | int | At least 1 |
+ 
+*(UserId, Year) is unique, so each reader has one goal per year.*
+ 
+**Relationships**
+ 
+- One **User** has many **ReadingListItems**, many **Reviews**, and one **ReadingGoal** per year.
+- One **Book** has many **ReadingListItems** and many **Reviews** from different readers.
+- A book's average rating is the average of `Reviews.Rating` for that `BookId`.
+- A reader's goal progress counts their **ReadingListItems** with `Status = Finished` and a `FinishedDate` in that year.
+  
 ---
 
 ## Team Composition
@@ -210,4 +277,4 @@ A small SQLite database stores the reading list and goal.
 
 ### Weekly Meeting
 
-**Monday, 4:00–4:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the GitHub Project board.
+**Mondays, 4:00–4:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the GitHub Project board.
