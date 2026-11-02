@@ -210,4 +210,4 @@ A small SQLite database stores the reading list and goal.
 
 ### Weekly Meeting
 
-**Sundays, 7:00–7:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the GitHub Project board.
+**Monday, 4:00–4:30 PM ET, on Microsoft Teams.** Each member shares what they finished, what's next, and anything blocking them, and then we update the GitHub Project board.
