@@ -10,6 +10,7 @@
     <None Include=".github\copilot-instructions.md" />
     <Compile Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />
+    <Content Remove="tests\**" />
     <None Remove="tests\**" />
   </ItemGroup>
 

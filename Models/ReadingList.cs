@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace IS7024_GroupProject.Models;
 
+[Index(nameof(UserId), nameof(BookId), IsUnique = true)]
 public sealed class ReadingList
 {
     public int ReadingListId { get; set; }

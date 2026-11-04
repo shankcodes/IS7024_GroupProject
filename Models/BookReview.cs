@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace IS7024_GroupProject.Models;
 
+[Index(nameof(UserId), nameof(BookId), IsUnique = true)]
 public sealed class BookReview
 {
     public int BookReviewId { get; set; }

@@ -4,7 +4,7 @@
 
 ## Summary
 
-Establish the BN-8 SQLite persistence foundation for `Books`, `ReadingList`, and `ReadingGoal`, then use ASP.NET Core Identity for account and role management, enforce user ownership through relational constraints and authorization checks, and support normalized reviews, comments, likes, and moderation metadata. The existing project already contains the core models, migrations, Identity registration, startup migration application, and Admin-role seeding; remaining implementation work is concentrated in protected Razor Page workflows, ownership filtering, moderation actions, and automated coverage.
+Establish the BN-8 SQLite persistence foundation for `Books`, `ReadingList`, and `ReadingGoal`, then use ASP.NET Core Identity for account and role management, enforce user ownership through relational constraints and authorization checks, and support normalized reviews, comments, likes, and moderation metadata. The existing project already contains the core models, migrations, Identity registration, and startup migration application; Admin role provisioning is deferred to deployment, while remaining implementation work is concentrated in protected Razor Page workflows, ownership filtering, moderation actions, and automated coverage.
 
 ## Technical Context
 
@@ -71,7 +71,6 @@ Pages/
 ├── Shared/
 └── ...                   # Razor Pages with ownership checks
 Services/
-└── IdentitySeed.cs
 Program.cs
 appsettings.json
 IS7024_GroupProject.csproj
@@ -81,7 +80,7 @@ IS7024_GroupProject.csproj
 
 ## Implementation Phases
 
-1. **Foundation**: Packages, Identity context, SQLite connection, model constraints, migrations, and Admin role seeding.
+1. **Foundation**: Packages, Identity context, SQLite connection, model constraints, and migrations. Admin role provisioning is deferred to deployment.
 2. **Authentication**: Account registration, login/logout, unique email validation, and authenticated session behavior.
 3. **Ownership**: Protect personal pages and scope all reading-list, goal, review, comment, and like queries to the current user.
 4. **Review community features**: Add review submission, aggregate ratings, comments, likes, and moderation workflows.

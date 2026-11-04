@@ -24,25 +24,6 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Book>()
-            .HasIndex(book => book.GoogleBooksId)
-            .IsUnique();
-
-        modelBuilder.Entity<ReadingList>()
-            .HasIndex(readingList => new { readingList.UserId, readingList.BookId })
-            .IsUnique();
-
-        modelBuilder.Entity<ReadingGoal>()
-            .HasKey(readingGoal => new { readingGoal.UserId, readingGoal.Year });
-
-        modelBuilder.Entity<BookReview>()
-            .HasIndex(bookReview => new { bookReview.UserId, bookReview.BookId })
-            .IsUnique();
-
-        modelBuilder.Entity<ReviewLike>()
-            .HasIndex(reviewLike => new { reviewLike.UserId, reviewLike.BookReviewId })
-            .IsUnique();
-
         modelBuilder.Entity<ReadingList>()
             .Property(readingList => readingList.Status)
             .HasConversion<string>();

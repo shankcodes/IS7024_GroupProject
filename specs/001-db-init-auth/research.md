@@ -36,11 +36,12 @@
 - Hard deletion only: rejected because moderation needs reversible visibility decisions.
 - Separate moderation history in the MVP: deferred until audit-history requirements are known.
 
-## Decision: Apply migrations during startup and seed only the Admin role
+## Decision: Apply migrations during startup and defer Admin provisioning
 
-**Rationale**: The local project can initialize an empty SQLite database automatically, and role seeding is deterministic and does not require embedding credentials. Admin account creation remains a secure deployment/setup operation.
+**Rationale**: The local project can initialize an empty SQLite database automatically. Admin role and account provisioning should be controlled by the cloud deployment process rather than automatically changing a shared production database at application startup.
 
 **Alternatives considered**:
 
 - Seed an Admin user and password in source: rejected because it would expose a secret and create an unsafe default account.
+- Automatic Admin role seeding at startup: deferred because shared cloud environments should provision roles explicitly.
 - Manual-only migration application: retained as an operational option, but startup migration keeps local setup reliable for the project.

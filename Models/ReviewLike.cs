@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace IS7024_GroupProject.Models;
 
+[Index(nameof(UserId), nameof(BookReviewId), IsUnique = true)]
 public sealed class ReviewLike
 {
     public int ReviewLikeId { get; set; }

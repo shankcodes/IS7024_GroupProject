@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace IS7024_GroupProject.Models;
 
+[Index(nameof(GoogleBooksId), IsUnique = true)]
 public sealed class Book
 {
     public int BookId { get; set; }

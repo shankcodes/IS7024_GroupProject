@@ -22,7 +22,7 @@
 - [X] T005 [P] Implement the catalog, reading, goal, user, review, comment, like, and moderation models under `Models/`
 - [X] T006 Configure unique `Book.GoogleBooksId`, unique `(ReadingList.UserId, ReadingList.BookId)`, composite `(ReadingGoal.UserId, ReadingGoal.Year)`, unique `(BookReview.UserId, BookReview.BookId)`, and unique `(ReviewLike.UserId, ReviewLike.BookReviewId)` constraints in `Data/ApplicationDbContext.cs`
 - [X] T007 [P] Configure ASP.NET Core Identity, unique email validation, role support, and authentication middleware in `Program.cs`
-- [X] T008 [P] Seed only the `Admin` role in `Services/IdentitySeed.cs` without storing an administrator password in source control
+- [ ] T008 [P] Provision the `Admin` role through the deployment process without storing an administrator password in source control
 - [X] T009 Generate and apply EF migrations under `Data/Migrations/`, including the Identity, reading, review, comment, and like tables
 
 **Checkpoint**: A fresh clone can create `BookNest.db` and the shared persistence/identity foundation is available.
