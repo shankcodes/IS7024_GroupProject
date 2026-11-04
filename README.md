@@ -303,7 +303,6 @@ BookReview 1 --- many ReviewLike
 - Moderation states are tracked for reviews and comments using `Pending`, `Approved`, `Rejected`, and `Hidden`.
 
 Reviews, comments, and likes are separate from reading progress so community content can be moderated and extended without changing the `ReadingList` record.
-
 ---
 
 ## Team Composition
