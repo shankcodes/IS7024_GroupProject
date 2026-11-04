@@ -173,6 +173,92 @@ Work is tracked on our [Jira Project board](https://mail-team-g68n68ck.atlassian
 
 ---
 
+## Google Books Search Implementation
+
+The current Google Books search implementation is in `Services/GoogleBooks`.
+It is consumed by the home-page Razor Page and is registered in `Program.cs`
+as a typed `HttpClient`:
+
+```csharp
+builder.Services.AddHttpClient<IGoogleBooksService, GoogleBooksService>(client =>
+{
+	client.BaseAddress = new Uri("https://www.googleapis.com/books/v1/");
+	client.Timeout = TimeSpan.FromSeconds(10);
+});
+```
+
+### Components
+
+| Component | Responsibility |
+|---|---|
+| `IGoogleBooksService` | Defines the asynchronous search contract. |
+| `GoogleBooksService` | Builds the Google Books request, performs the HTTP call, maps API responses, and converts failures to a result status. |
+| `BookSearchItem` | Represents a book shown in search results: ISBN, title, author, description, cover URL, and Google Books ID. |
+| `BookSearchResult` | Carries the result status, mapped books, and reader-facing message. |
+| `GoogleBooksOptions` | Reads the optional API key and maximum result count from configuration. |
+| `GoogleBooksResponse` | Defines the JSON response models used to deserialize Google Books volumes. |
+
+### Search flow
+
+1. The home page binds the search text from the GET query string.
+2. `IndexModel` delegates non-empty searches to `IGoogleBooksService.SearchAsync`.
+3. `GoogleBooksService` calls the Google Books volumes endpoint with the query,
+   `printType=books`, and the configured maximum result count.
+4. Each volume is mapped to a `BookSearchItem`. Volumes without a Google Books
+   ID, title, or ISBN are ignored.
+5. ISBN-13 is preferred. If it is unavailable, the implementation uses ISBN-10.
+6. The page renders the title, author, ISBN, description, and cover URL. Missing
+   cover images use `/images/no-cover.svg`.
+
+### Result statuses and failures
+
+`BookSearchResult` provides these statuses:
+
+- `Success`: one or more books were mapped.
+- `EmptyQuery`: the search text is empty or whitespace; no API request is made.
+- `NoResults`: Google Books returned no usable matching volumes.
+- `ServiceUnavailable`: Google Books returned an unsuccessful status, timed out,
+  could not be reached, or returned invalid JSON.
+
+The page displays the corresponding reader-facing messages, including
+`Please enter a title or author.`, `No books found.`, and the unavailable-service
+message. HTTP errors, timeouts, and malformed JSON are logged and do not escape
+as page errors.
+
+### API key configuration
+
+The API key is read from the `GoogleBooks:ApiKey` configuration key and must be
+stored in ASP.NET Core user secrets during local development. Do not commit the
+key to `appsettings.json` or source control. For example:
+
+```powershell
+dotnet user-secrets set "GoogleBooks:ApiKey" "<your-api-key>"
+```
+
+`GoogleBooks:MaxResults` is optional and defaults to 20; the service clamps the
+value to the Google Books API range of 1 through 40.
+
+### Tests
+
+The Google Books implementation is tested in
+`tests/IS7024_GroupProject.Tests/GoogleBooks` using a fake HTTP message handler
+and checked-in JSON fixtures. The tests cover:
+
+- Searches for *The Hobbit* and Andy Weir titles.
+- ISBN-13 and ISBN-10 selection.
+- Placeholder covers and HTTPS conversion for HTTP thumbnails.
+- Empty, whitespace, and null queries without an API call.
+- No-result responses.
+- HTTP errors and timeout handling.
+
+Run the test project with:
+
+```powershell
+dotnet test tests/IS7024_GroupProject.Tests/IS7024_GroupProject.Tests.csproj
+```
+
+---
+
 ## Authentication and Authorization
 
 BookNest uses ASP.NET Core Identity with integer user IDs. Identity provides password hashing, login, logout, account management, and role support. Email addresses must be unique.
