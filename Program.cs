@@ -1,10 +1,20 @@
 using IS7024_GroupProject.Services;
+using IS7024_GroupProject.Services.GoogleBooks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<ShortcutEntryStore>();
+
+// BN-6: Google Books search. The API key comes from user secrets ("GoogleBooks:ApiKey").
+builder.Services.Configure<GoogleBooksOptions>(
+    builder.Configuration.GetSection(GoogleBooksOptions.SectionName));
+builder.Services.AddHttpClient<IGoogleBooksService, GoogleBooksService>(client =>
+{
+    client.BaseAddress = new Uri("https://www.googleapis.com/books/v1/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 var app = builder.Build();
 

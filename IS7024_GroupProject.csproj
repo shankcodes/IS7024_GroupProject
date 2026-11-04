@@ -4,10 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>24e2af37-79c3-49c1-930a-53a1d2a64323</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include=".github\copilot-instructions.md" />
+    <Compile Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
   </ItemGroup>
 
 </Project>
