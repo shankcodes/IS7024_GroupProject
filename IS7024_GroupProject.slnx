@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="IS7024_GroupProject.csproj" />
+  <Project Path="tests/IS7024_GroupProject.Tests/IS7024_GroupProject.Tests.csproj" />
 </Solution>
