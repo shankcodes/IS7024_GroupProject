@@ -17,7 +17,8 @@
 6. [Data Sources](#data-sources)
 7. [Authentication and Authorization](#authentication-and-authorization)
 8. [Database](#database)
-9. [Team Composition](#team-composition)
+9. [Model Design](#model-design)
+10. [Team Composition](#team-composition)
 
 ---
 
@@ -38,17 +39,21 @@ Built with **C# / ASP.NET Core** in **Visual Studio 2026**.
 
 ## Icon / Logo
 
-<img src="images/BookNest_logo.png" alt="BookNest logo" width="150">
+<img src="images/BookNest_logo.png" alt="BookNest logo: a book resting in a nest with a bird on top." width="150">
 
-An open book resting in a nest: a cozy home for your reading list.
+ We wanted something simple and recognizable. The logo is a book resting in a nest with a bird on top, representing the idea of a cozy place to keep your books and reading goals.
 
 ---
 
 ## Storyboard
 
+The overarching design is to have a simple home page that displays a search bar that allows you to search for a book by name, author, genre, and reviews. We want to include these search topics so it is easy for users to find the books they are looking for. 
+
+Thought the search bar is the primary focus of the home page, we also want to include a reading goal progress bar and a list of books that our reader read for this month/years. Along with that we want to include a "Read Next" section to expose our users to books that might interest them. 
+
 | Screen | Widgets |
 |---|---|
-| **Home** | Reading goal progress bar, *Reading* list, link to Search |
+| **Home** | Reading goal progress bar, Search Box, Read Next section |
 | **Search** | Search box, Search button, results (cover, title, author), *Add to List* button |
 | **My List** | Books grouped by status, status dropdown, *Remove* button |
 | **Book Details** | Cover, title, author, description, star rating, review box, *Save* button |
@@ -265,9 +270,9 @@ BookNest uses ASP.NET Core Identity with integer user IDs. Identity provides pas
 
 Reading lists, reading goals, reviews, comments, and likes are associated with the authenticated user's ID. User-owned queries and page handlers must filter by that ID so one user cannot access or change another user's data.
 
-The `Admin` role is seeded for application-level moderation features. Admin access should be limited to explicit moderation and management pages using role-based authorization such as `[Authorize(Roles = "Admin")]`. The Admin role does not provide unrestricted access to the SQLite database.
+The application supports an `Admin` role for future moderation features. Admin access should be limited to explicit moderation and management pages using role-based authorization such as `[Authorize(Roles = "Admin")]`. The Admin role does not provide unrestricted access to the database.
 
-Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup, and the Admin role is created if it does not already exist. No administrator account or password is stored in source code.
+Database migrations create the Identity tables and application tables. Pending migrations are applied during application startup. Admin role and account provisioning will be handled separately during deployment; no administrator account or password is stored in source code.
 
 ---
 
@@ -349,6 +354,45 @@ A small SQLite database, built with Entity Framework Core, stores books, each re
 - A book's average rating is the average of `Reviews.Rating` for that `BookId`.
 - A reader's goal progress counts their **ReadingListItems** with `Status = Finished` and a `FinishedDate` in that year.
   
+---
+
+## Model Design
+
+The domain model is designed for a multi-user reading application. The detailed model reference is available in [Models/README.md](Models/README.md).
+
+### Entity Responsibilities
+
+- **User**: Identity account, authentication, and role membership through ASP.NET Core Identity.
+- **Book**: Shared catalog record identified by a unique `GoogleBooksId`.
+- **ReadingList**: One user's reading status and completion date for a book.
+- **ReadingGoal**: One user's annual reading target.
+- **BookReview**: One user's rating, review, summary, timestamps, and moderation state for a book.
+- **ReviewComment**: A user-authored comment on a review with moderation metadata.
+- **ReviewLike**: A user's like on a review.
+
+### Relationships and Constraints
+
+```text
+User 1 --- many ReadingList
+User 1 --- many ReadingGoal
+User 1 --- many BookReview
+User 1 --- many ReviewComment
+User 1 --- many ReviewLike
+Book 1 --- many ReadingList
+Book 1 --- many BookReview
+BookReview 1 --- many ReviewComment
+BookReview 1 --- many ReviewLike
+```
+
+- `GoogleBooksId` is unique so the shared catalog does not save the same book twice.
+- `(UserId, BookId)` is unique in `ReadingList` so a user cannot add a book twice.
+- `(UserId, Year)` is the composite key for `ReadingGoal`.
+- `(UserId, BookId)` is unique in `BookReview` so each user has one review per book.
+- `(UserId, BookReviewId)` is unique in `ReviewLike` so a user can like a review once.
+- Ratings are stored per user and aggregated from approved reviews; a single aggregate rating is not stored on `Book`.
+- Moderation states are tracked for reviews and comments using `Pending`, `Approved`, `Rejected`, and `Hidden`.
+
+Reviews, comments, and likes are separate from reading progress so community content can be moderated and extended without changing the `ReadingList` record.
 ---
 
 ## Team Composition

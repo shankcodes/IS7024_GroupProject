@@ -1,10 +1,23 @@
+using IS7024_GroupProject.Data;
+using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Services;
 using IS7024_GroupProject.Services.GoogleBooks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDefaultIdentity<User>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddRoles<IdentityRole<int>>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddScoped<ReadingListStore>();
 builder.Services.AddSingleton<ShortcutEntryStore>();
 
 // BN-6: Google Books search. The API key comes from user secrets ("GoogleBooks:ApiKey").
@@ -30,10 +43,17 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 app.Run();
