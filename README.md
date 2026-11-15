@@ -39,17 +39,21 @@ Built with **C# / ASP.NET Core** in **Visual Studio 2026**.
 
 ## Icon / Logo
 
-<img src="images/BookNest_logo.png" alt="BookNest logo" width="150">
+<img src="images/BookNest_logo.png" alt="BookNest logo: a book resting in a nest with a bird on top." width="150">
 
-An open book resting in a nest: a cozy home for your reading list.
+ We wanted something simple and recognizable. The logo is a book resting in a nest with a bird on top, representing the idea of a cozy place to keep your books and reading goals.
 
 ---
 
 ## Storyboard
 
+The overarching design is to have a simple home page that displays a search bar that allows you to search for a book by name, author, genre, and reviews. We want to include these search topics so it is easy for users to find the books they are looking for. 
+
+Thought the search bar is the primary focus of the home page, we also want to include a reading goal progress bar and a list of books that our reader read for this month/years. Along with that we want to include a "Read Next" section to expose our users to books that might interest them. 
+
 | Screen | Widgets |
 |---|---|
-| **Home** | Reading goal progress bar, *Reading* list, link to Search |
+| **Home** | Reading goal progress bar, Search Box, Read Next section |
 | **Search** | Search box, Search button, results (cover, title, author), *Add to List* button |
 | **My List** | Books grouped by status, status dropdown, *Remove* button |
 | **Book Details** | Cover, title, author, description, star rating, review box, *Save* button |
