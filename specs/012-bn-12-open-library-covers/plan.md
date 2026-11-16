@@ -14,12 +14,6 @@ Open Library call.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
 **Language/Version**: C# / .NET 10
 
 **Primary Dependencies**: Existing ASP.NET Core Razor Pages and Google Books service
@@ -34,7 +28,7 @@ Open Library call.
 
 **Performance Goals**: Do not add a server-side Open Library request or serial dependency to search responses
 
-**Constraints**: No new NuGet packages, service, `HttpClient`, API key, database change, migration, or `Program.cs` change; only `Services/GoogleBooks/GoogleBooksService.cs` is in scope for implementation.
+**Constraints**: No new NuGet packages, service, `HttpClient`, API key, database change, migration, or `Program.cs` change. Implementation is limited to `Services/GoogleBooks/GoogleBooksService.cs`, with one approved markup exception for the existing search-result image in `Pages/Index.cshtml`.
 
 **Scale/Scope**: Cover selection for existing search results only; Open Library search fallback is out of scope.
 
@@ -44,7 +38,7 @@ Open Library call.
 
 - Code quality: PASS — the change is limited to one existing method and one constant.
 - Testing: PASS — add or update focused xUnit coverage for cover priority and ISBN fallback without adding packages.
-- User experience: PASS — retain the existing placeholder and document the BN-7 image `onerror` follow-up if the search markup is not merged.
+- User experience: PASS — retain the existing placeholder and add only the specified `onerror` fallback to the existing search-result image.
 - Performance: PASS — no server-side Open Library call; browser image requests remain independent.
 - Security and technology constraints: PASS — no API key, persistence, migration, or new dependency.
 
@@ -62,13 +56,6 @@ specs/012-bn-12-open-library-covers/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
-
 ```text
 Services/GoogleBooks/GoogleBooksService.cs
 tests/IS7024_GroupProject.Tests/GoogleBooks/GoogleBooksServiceTests.cs
@@ -76,12 +63,11 @@ Pages/Index.cshtml                         # BN-7 follow-up only, if search mark
 ```
 
 **Structure Decision**: Keep the existing single ASP.NET Core Razor Pages
-project. Implementation changes are limited to
-`Services/GoogleBooks/GoogleBooksService.cs`; focused tests belong in the
-existing Google Books test file or its test directory. Do not create a new
-page. If `Pages/Index.cshtml` does not yet contain BN-7 search-result markup,
-record the `onerror` attribute as a follow-up for BN-7 rather than changing it
-in BN-12.
+project. Implementation changes are limited to `Services/GoogleBooks/GoogleBooksService.cs`
+plus one approved exception: add the specified `onerror` attribute to the
+existing search-result `<img>` in `Pages/Index.cshtml`, with no other markup
+changes. Do not create a new page. If the BN-7 search-result markup is not
+present, record that image change as a BN-7 follow-up instead.
 
 ## Complexity Tracking
 
@@ -96,12 +82,16 @@ packages, endpoints, persistence, and startup changes.
    `?default=false` ISBN cover URL only after Google Books cover candidates are
    exhausted.
 3. Preserve `/images/no-cover.svg` when no ISBN is available.
-4. Update existing Google Books unit tests for Google-cover priority,
-   ISBN-13 fallback, ISBN-10 fallback, and no-ISBN placeholder behavior.
-5. If BN-7 search-result markup is available, add the specified browser
+4. Update the existing BN-6 Dune `SearchAsync` test to assert the Open Library
+   URL; this is an intentional behavior change from the old placeholder result.
+5. Add the no-server-call AC4 test and confirm only the Google Books handler
+   records a request.
+6. If BN-7 search-result markup is available, add the specified browser
    `onerror` fallback to its existing `<img>` element; otherwise leave a
    follow-up note and do not create or modify a page.
-6. Run the existing xUnit tests and build the solution.
+7. Check the browser fallback manually using `quickstart.md`; a browser or
+   `WebApplicationFactory` test is out of scope for this one-point story.
+8. Run the existing xUnit tests and build the solution.
 
 ## Explicitly Excluded
 

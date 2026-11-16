@@ -23,7 +23,7 @@ As a reader, I want a book result without a Google Books cover to display the ma
 
 ### User Story 2 - Preserve a usable result when no cover exists (Priority: P1)
 
-As a reader, I want a consistent placeholder when neither source has a cover so that missing imagery does not make the search result unusable.
+As a reader, I want a consistent placeholder when neither source has a cover for an included book so that missing imagery does not make the search result unusable.
 
 **Why this priority**: Search results must remain complete and visually consistent even when external metadata is incomplete.
 
@@ -31,7 +31,7 @@ As a reader, I want a consistent placeholder when neither source has a cover so 
 
 **Acceptance Scenarios**:
 
-1. **Given** neither Google Books nor Open Library has a cover for a result, **When** the results load, **Then** the result displays `/images/no-cover.svg`.
+1. **Given** a result has an ISBN and neither Google Books nor Open Library has a cover, **When** the results load, **Then** its image displays `/images/no-cover.svg`.
 
 ---
 
@@ -63,7 +63,8 @@ As a reader, I want Google Books results to remain visible when Open Library is 
 
 ### Edge Cases
 
-- A result has neither an ISBN-13 nor an ISBN-10; it uses the placeholder cover.
+- A result has neither an ISBN-13 nor an ISBN-10; it is excluded by the existing `MapToSearchItem` rule because books are keyed by ISBN.
+- The cover-selection helper receives no ISBN; it defensively returns `/images/no-cover.svg` even though normal mapping excludes no-ISBN results.
 - Open Library returns no cover for a valid ISBN; it uses the placeholder cover.
 - Open Library returns an error, times out, or cannot be reached; the Google Books result remains visible.
 - Google Books already provides a cover; that cover is retained and no fallback cover replaces it.
@@ -78,7 +79,7 @@ As a reader, I want Google Books results to remain visible when Open Library is 
 - **FR-002**: The system MUST use the book's ISBN-13 to find a fallback cover when Google Books has no cover.
 - **FR-003**: When ISBN-13 is unavailable, the system MUST use the book's ISBN-10 to find a fallback cover.
 - **FR-004**: The system MUST display the fallback cover when a matching Open Library cover is available.
-- **FR-005**: The system MUST display `/images/no-cover.svg` when neither source provides a cover or when no usable ISBN is available.
+- **FR-005**: The system MUST display `/images/no-cover.svg` for an included ISBN-bearing result when neither source provides a cover; the cover-selection helper MUST also return the placeholder defensively when called without an ISBN.
 - **FR-006**: An Open Library failure MUST NOT prevent Google Books results from being displayed.
 - **FR-007**: The system MUST evaluate cover availability independently for each search result.
 - **FR-008**: The feature MUST be limited to cover fallback. It MUST NOT use Open Library as a backup source for book search results when Google Books is unavailable.
@@ -105,5 +106,7 @@ As a reader, I want Google Books results to remain visible when Open Library is 
 - A book's ISBN-13 is the preferred matching identifier; ISBN-10 is used only when ISBN-13 is unavailable.
 - Open Library cover availability can change independently of Google Books metadata.
 - The existing `/images/no-cover.svg` asset is available to the search-results page.
+- Results without an ISBN remain excluded by the existing BN-6 `MapToSearchItem` behavior because books are keyed by ISBN; AC2 applies only to included results that have an ISBN.
+- `PickCoverUrl(imageLinks: null, isbn: null)` returns `/images/no-cover.svg` as a defensive fallback, tested directly rather than through normal result mapping.
 - Open Library search as a backup when Google Books is down is outside this feature's scope.
 - No new database tables, migrations, or API keys are needed.
