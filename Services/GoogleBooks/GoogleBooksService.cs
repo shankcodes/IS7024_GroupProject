@@ -12,6 +12,7 @@ public class GoogleBooksService : IGoogleBooksService
 {
     // Shown when Google Books has no cover. BN-12 replaces it with an Open Library cover.
     public const string PlaceholderCoverUrl = "/images/no-cover.svg";
+    public const string OpenLibraryCoverUrlFormat = "https://covers.openlibrary.org/b/isbn/{0}-M.jpg?default=false";
 
     private readonly HttpClient _httpClient;
     private readonly GoogleBooksOptions _options;
@@ -130,7 +131,7 @@ public class GoogleBooksService : IGoogleBooksService
             Title = info.Title.Trim(),
             Author = info.Authors is { Count: > 0 } ? string.Join(", ", info.Authors) : "Unknown author",
             Description = info.Description,
-            CoverUrl = PickCoverUrl(info.ImageLinks),
+            CoverUrl = PickCoverUrl(info.ImageLinks, isbn),
             GoogleBooksId = volume.Id.Trim()
         };
     }
@@ -159,12 +160,14 @@ public class GoogleBooksService : IGoogleBooksService
     }
 
     // Prefer the bigger "thumbnail", fall back to "smallThumbnail", then to our placeholder.
-    public static string PickCoverUrl(GoogleBooksImageLinks? imageLinks)
+    public static string PickCoverUrl(GoogleBooksImageLinks? imageLinks, string? isbn)
     {
         string? url = imageLinks?.Thumbnail ?? imageLinks?.SmallThumbnail;
         if (string.IsNullOrWhiteSpace(url))
         {
-            return PlaceholderCoverUrl;
+            return string.IsNullOrWhiteSpace(isbn)
+                ? PlaceholderCoverUrl
+                : string.Format(OpenLibraryCoverUrlFormat, isbn);
         }
 
         // Google Books often sends "http://books.google.com/..." links.
