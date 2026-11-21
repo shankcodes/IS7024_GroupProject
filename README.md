@@ -278,7 +278,7 @@ Database migrations create the Identity tables and application tables. Pending m
 
 ## Database
  
-A small SQLite database, built with Entity Framework Core, stores books, each reader's reading list, reviews, and goals. Ratings and reviews are stored per book, so BookNest can show the average rating from all readers. Over time, this builds BookNest's own collection of reader reviews.
+An Azure SQL Database, accessed through Entity Framework Core, stores books, each reader's reading list, reviews, and goals. Ratings and reviews are stored per book, so BookNest can show the average rating from all readers. Over time, this builds BookNest's own collection of reader reviews.
  
 **Naming conventions** (standard C# and Entity Framework Core):
  
