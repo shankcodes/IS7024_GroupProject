@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using IS7024_GroupProject.Services.GoogleBooks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IS7024_GroupProject.Pages;
 
@@ -14,6 +15,7 @@ public class IndexModel : PageModel
     private readonly UserManager<User>? userManager;
     private readonly ReadingListStore? readingListStore;
 
+    [ActivatorUtilitiesConstructor]
     public IndexModel(
         IGoogleBooksService googleBooksService,
         UserManager<User> userManager,
