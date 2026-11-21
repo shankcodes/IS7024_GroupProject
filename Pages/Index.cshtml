@@ -8,6 +8,11 @@
     <h1>Find your next book</h1>
     <p class="lead">Search by title or author to discover books for your reading list.</p>
 
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-info" role="status">@Model.StatusMessage</div>
+    }
+
     <form method="get" class="row g-3 mb-5" role="search">
         <div class="col-md-9">
             <label asp-for="Query" class="form-label">Title or author</label>
@@ -45,6 +50,14 @@
                                     {
                                         <p class="card-text small">@book.Description</p>
                                     }
+                                    <form method="post" asp-page-handler="AddToList" class="mt-auto">
+                                        <input type="hidden" name="Query" value="@Model.Query" />
+                                        <input type="hidden" asp-for="AddToListInput.Title" value="@book.Title" />
+                                        <input type="hidden" asp-for="AddToListInput.Author" value="@book.Author" />
+                                        <input type="hidden" asp-for="AddToListInput.GoogleBooksId" value="@book.GoogleBooksId" />
+                                        <input type="hidden" asp-for="AddToListInput.CoverUrl" value="@book.CoverUrl" />
+                                        <button type="submit" class="btn btn-primary w-100">Add to List</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
