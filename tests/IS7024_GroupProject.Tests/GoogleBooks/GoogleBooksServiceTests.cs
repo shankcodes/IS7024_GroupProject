@@ -71,9 +71,9 @@ public class GoogleBooksServiceTests
         Assert.Equal("TEST_HOBBIT_ID", hobbit.GoogleBooksId);
     }
 
-    // AC4: No cover image -> placeholder cover (until Open Library provides one in BN-12).
+    // AC1: No Google Books cover -> Open Library ISBN-13 cover.
     [Fact]
-    public async Task SearchAsync_ResultWithoutCover_UsesPlaceholderCover()
+    public async Task SearchAsync_ResultWithoutCover_UsesOpenLibraryCover()
     {
         var handler = new FakeHttpMessageHandler(ReadFixture("no-cover.json"));
         var service = CreateService(handler);
@@ -81,8 +81,46 @@ public class GoogleBooksServiceTests
         BookSearchResult result = await service.SearchAsync("Dune");
 
         BookSearchItem dune = Assert.Single(result.Books);
-        Assert.Equal(GoogleBooksService.PlaceholderCoverUrl, dune.CoverUrl);
+        Assert.Equal("https://covers.openlibrary.org/b/isbn/9780441172719-M.jpg?default=false", dune.CoverUrl);
         Assert.Equal("9780441172719", dune.Isbn13);
+    }
+
+    [Fact]
+    public async Task SearchAsync_Dune_DoesNotCallOpenLibrary()
+    {
+        var handler = new FakeHttpMessageHandler(ReadFixture("no-cover.json"));
+        var service = CreateService(handler);
+
+        BookSearchResult result = await service.SearchAsync("Dune");
+
+        Assert.Equal(BookSearchStatus.Success, result.Status);
+        Assert.Contains(result.Books, book => book.Title == "Dune");
+        Assert.NotEmpty(handler.Requests);
+        Assert.All(handler.Requests, request =>
+        {
+            Assert.EndsWith("googleapis.com", request.RequestUri!.Host);
+            Assert.NotEqual("openlibrary.org", request.RequestUri.Host);
+        });
+    }
+
+    [Fact]
+    public async Task SearchAsync_DuneWithoutGoogleCover_UsesOpenLibraryIsbn13Cover()
+    {
+        var handler = new FakeHttpMessageHandler(ReadFixture("no-cover.json"));
+        var service = CreateService(handler);
+
+        BookSearchResult result = await service.SearchAsync("Dune");
+
+        BookSearchItem dune = Assert.Single(result.Books);
+        Assert.Equal("https://covers.openlibrary.org/b/isbn/9780441172719-M.jpg?default=false", dune.CoverUrl);
+    }
+
+    [Fact]
+    public void PickCoverUrl_WithoutImageLinksOrIsbn_UsesPlaceholderCover()
+    {
+        string coverUrl = GoogleBooksService.PickCoverUrl(imageLinks: null, isbn: null);
+
+        Assert.Equal(GoogleBooksService.PlaceholderCoverUrl, coverUrl);
     }
 
     // ---------- related rules ----------
@@ -169,6 +207,18 @@ public class GoogleBooksServiceTests
 
         BookSearchItem book = Assert.Single(result.Books);
         Assert.Equal("054792822X", book.Isbn13);
+    }
+
+    [Fact]
+    public async Task SearchAsync_OnlyIsbn10_UsesOpenLibraryIsbn10Cover()
+    {
+        var handler = new FakeHttpMessageHandler(ReadFixture("isbn10-only.json"));
+        var service = CreateService(handler);
+
+        BookSearchResult result = await service.SearchAsync("The Hobbit");
+
+        BookSearchItem book = Assert.Single(result.Books);
+        Assert.Equal("https://covers.openlibrary.org/b/isbn/054792822X-M.jpg?default=false", book.CoverUrl);
     }
 
     // Google Books sends http:// thumbnails -> we switch them to https://.
