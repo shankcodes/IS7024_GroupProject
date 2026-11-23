@@ -67,3 +67,6 @@ This document summarizes the Copilot collaboration that produced the feature art
   - **AC2**: `PickCoverUrl_WithoutImageLinksOrIsbn_UsesPlaceholderCover`, plus the browser `onerror` fallback and manual quickstart check.
   - **AC3**: `SearchAsync_OnlyIsbn10_UsesOpenLibraryIsbn10Cover`.
   - **AC4**: `SearchAsync_Dune_DoesNotCallOpenLibrary`, which verifies a successful Dune result and no Open Library server request.
+
+### 7. Review feedback (Pranava): 
+-Comments updated, quickstart no-ISBN step corrected, browser test deferred to BN-15."

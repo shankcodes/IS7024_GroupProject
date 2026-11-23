@@ -10,7 +10,7 @@ namespace IS7024_GroupProject.Services.GoogleBooks;
 // already has its BaseAddress (https://www.googleapis.com/books/v1/) and Timeout set.
 public class GoogleBooksService : IGoogleBooksService
 {
-    // Shown when Google Books has no cover. BN-12 replaces it with an Open Library cover.
+    // Shown when neither Google Books nor Open Library has a cover (also used when a result has no ISBN)
     public const string PlaceholderCoverUrl = "/images/no-cover.svg";
     public const string OpenLibraryCoverUrlFormat = "https://covers.openlibrary.org/b/isbn/{0}-M.jpg?default=false";
 
@@ -159,7 +159,9 @@ public class GoogleBooksService : IGoogleBooksService
         return null;
     }
 
-    // Prefer the bigger "thumbnail", fall back to "smallThumbnail", then to our placeholder.
+    // Prefer the Google Books "thumbnail", then "smallThumbnail". If neither exists, use the
+    // Open Library cover for the ISBN; if there's no ISBN, use our placeholder. If Open Library
+    // has no cover, the <img> onerror on the page swaps in the placeholder.
     public static string PickCoverUrl(GoogleBooksImageLinks? imageLinks, string? isbn)
     {
         string? url = imageLinks?.Thumbnail ?? imageLinks?.SmallThumbnail;

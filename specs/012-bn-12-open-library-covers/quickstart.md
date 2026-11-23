@@ -31,7 +31,7 @@ Open the HTTPS URL printed by the application.
 
 - Search for a result with an existing Google Books thumbnail and confirm that Google Books remains the displayed cover source.
 - Search for a result with only an ISBN-10 and confirm the generated Open Library cover URL contains that ISBN-10.
-- Search for a result without either ISBN and confirm the placeholder is used immediately.
+- No-ISBN placeholder: not testable in the browser, because results without an ISBN are excluded (BN-6 behavior). Covered by the unit test PickCoverUrl_WithoutImageLinksOrIsbn_UsesPlaceholderCover.
 - Block or make the Open Library cover request fail and confirm the Google Books result remains visible while the image falls back to `/images/no-cover.svg`.
 
 ## Automated validation after implementation
