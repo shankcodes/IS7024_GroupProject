@@ -1,6 +1,7 @@
 using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -11,20 +12,21 @@ public sealed class PersistenceTests
     [Fact]
     public async Task CoreTablesAreAvailableInDbContext()
     {
-        await using var context = CreateContext("core-tables");
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
 
         Assert.NotNull(context.Books);
         Assert.NotNull(context.ReadingLists);
         Assert.NotNull(context.ReadingGoals);
-        Assert.True(await context.Database.EnsureCreatedAsync());
+        Assert.True(await context.Database.CanConnectAsync());
     }
 
     [Fact]
     public async Task ReadingListEntryPersistsAcrossContexts()
     {
-        const string databaseName = "reading-list-persistence";
+        await using var connection = await CreateConnectionAsync();
 
-        await using (var context = CreateContext(databaseName))
+        await using (var context = await CreateContextAsync(connection))
         {
             var user = CreateUser(1);
             var book = new Book
@@ -46,7 +48,7 @@ public sealed class PersistenceTests
             await context.SaveChangesAsync();
         }
 
-        await using (var restartedContext = CreateContext(databaseName))
+        await using (var restartedContext = await CreateContextAsync(connection))
         {
             var readingListEntry = await restartedContext.ReadingLists
                 .Include(entry => entry.Book)
@@ -60,7 +62,8 @@ public sealed class PersistenceTests
     [Fact]
     public async Task BookAndReadingGoalCanBePersisted()
     {
-        await using var context = CreateContext("book-and-goal");
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
         var user = CreateUser(1);
         var book = new Book
         {
@@ -87,7 +90,8 @@ public sealed class PersistenceTests
     [Fact]
     public async Task AddBookToList_CreatesWantToReadEntryWithCover()
     {
-        await using var context = CreateContext("add-the-martian");
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
         var user = CreateUser(1);
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -111,7 +115,8 @@ public sealed class PersistenceTests
     [Fact]
     public async Task AddBookToListTwice_ReturnsFalseAndKeepsOneCopy()
     {
-        await using var context = CreateContext("duplicate-book");
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
         var user = CreateUser(1);
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -125,9 +130,41 @@ public sealed class PersistenceTests
     }
 
     [Fact]
+    public async Task AddExistingSharedBook_DoesNotOverwriteItsMetadataFromPostedValues()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+        var user = CreateUser(1);
+        var book = new Book
+        {
+            Title = "Canonical Title",
+            Author = "Canonical Author",
+            GoogleBooksId = "shared-book",
+            CoverUrl = "https://covers.example/canonical.jpg"
+        };
+        context.Users.Add(user);
+        context.Books.Add(book);
+        await context.SaveChangesAsync();
+
+        var store = new Services.ReadingListStore(context);
+        bool added = await store.AddBookAsync(
+            user.Id,
+            "Forged Title",
+            "Forged Author",
+            book.GoogleBooksId,
+            coverUrl: "https://attacker.example/cover.jpg");
+
+        Assert.True(added);
+        Assert.Equal("Canonical Title", book.Title);
+        Assert.Equal("Canonical Author", book.Author);
+        Assert.Equal("https://covers.example/canonical.jpg", book.CoverUrl);
+    }
+
+    [Fact]
     public async Task ReadingListEntryIncludesCoverTitleAndAuthor()
     {
-        await using var context = CreateContext("dune-reading-list");
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
         var user = CreateUser(1);
         var book = new Book
         {
@@ -155,13 +192,21 @@ public sealed class PersistenceTests
         Assert.Equal("https://covers.example/dune.jpg", entry.Book.CoverUrl);
     }
 
-    private static ApplicationDbContext CreateContext(string databaseName)
+    private static async Task<SqliteConnection> CreateConnectionAsync()
+    {
+        var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        return connection;
+    }
+
+    private static async Task<ApplicationDbContext> CreateContextAsync(SqliteConnection connection)
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName)
+            .UseSqlite(connection)
             .Options;
-
-        return new ApplicationDbContext(options);
+        var context = new ApplicationDbContext(options);
+        await context.Database.EnsureCreatedAsync();
+        return context;
     }
 
     private static User CreateUser(int userId)

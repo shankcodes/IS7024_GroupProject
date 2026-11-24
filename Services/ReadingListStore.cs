@@ -21,8 +21,8 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
         string title,
         string author,
         string googleBooksId,
-        CancellationToken cancellationToken = default,
-        string? coverUrl = null)
+        string? coverUrl = null,
+        CancellationToken cancellationToken = default)
     {
         var book = await dbContext.Books
             .SingleOrDefaultAsync(existingBook => existingBook.GoogleBooksId == googleBooksId, cancellationToken);
@@ -39,21 +39,6 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
 
             dbContext.Books.Add(book);
             await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        else
-        {
-            bool changed = false;
-
-            if (!string.IsNullOrWhiteSpace(coverUrl) && book.CoverUrl != coverUrl)
-            {
-                book.CoverUrl = coverUrl;
-                changed = true;
-            }
-
-            if (changed)
-            {
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
         }
 
         var alreadyOnList = await dbContext.ReadingLists

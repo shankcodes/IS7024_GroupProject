@@ -1,35 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Services;
+using IS7024_GroupProject.Services.GoogleBooks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using IS7024_GroupProject.Services.GoogleBooks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace IS7024_GroupProject.Pages;
 
-public class IndexModel : PageModel
+public class IndexModel(
+    ApplicationDbContext dbContext,
+    IGoogleBooksService googleBooksService) : PageModel
 {
-    private readonly IGoogleBooksService googleBooksService;
-    private readonly UserManager<User>? userManager;
-    private readonly ReadingListStore? readingListStore;
-
-    [ActivatorUtilitiesConstructor]
-    public IndexModel(
-        IGoogleBooksService googleBooksService,
-        UserManager<User> userManager,
-        ReadingListStore readingListStore)
-    {
-        this.googleBooksService = googleBooksService;
-        this.userManager = userManager;
-        this.readingListStore = readingListStore;
-    }
-
-    public IndexModel(IGoogleBooksService googleBooksService)
-    {
-        this.googleBooksService = googleBooksService;
-    }
+    private readonly ReadingListStore readingListStore = new(dbContext);
 
     [BindProperty(SupportsGet = true)]
     public string? Query { get; set; }
@@ -64,7 +49,10 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostAddToListAsync(CancellationToken cancellationToken)
     {
-        if (userManager is null || readingListStore is null)
+        if (User.Identity?.IsAuthenticated != true
+            || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId)
+            || userId <= 0
+            || !await dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken))
         {
             return Challenge();
         }
@@ -74,19 +62,13 @@ public class IndexModel : PageModel
             return BadRequest();
         }
 
-        var user = await userManager.GetUserAsync(User);
-        if (user is null)
-        {
-            return Challenge();
-        }
-
         bool added = await readingListStore.AddBookAsync(
-            user.Id,
+            userId,
             AddToListInput.Title,
             AddToListInput.Author,
             AddToListInput.GoogleBooksId,
-            cancellationToken,
-            AddToListInput.CoverUrl);
+            AddToListInput.CoverUrl,
+            cancellationToken);
 
         if (!added)
         {
@@ -94,6 +76,7 @@ public class IndexModel : PageModel
             return RedirectToPage(new { Query });
         }
 
+        StatusMessage = "Added to your list.";
         return RedirectToPage("/ReadingList");
     }
 

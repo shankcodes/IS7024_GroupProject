@@ -1,5 +1,7 @@
+using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Pages;
 using IS7024_GroupProject.Services.GoogleBooks;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace IS7024_GroupProject.Tests;
@@ -23,7 +25,9 @@ public sealed class IndexModelTests
                 }
             ])
         };
-        var model = new IndexModel(service) { Query = "The Hobbit" };
+        await using var dbContext = CreateContext();
+        var model = new IndexModel(dbContext, service);
+        model.Query = "The Hobbit";
 
         await model.OnGetAsync(CancellationToken.None);
 
@@ -36,7 +40,9 @@ public sealed class IndexModelTests
     public async Task OnGetAsync_WithEmptyQuery_ShowsMessageWithoutCallingService()
     {
         var service = new FakeGoogleBooksService();
-        var model = new IndexModel(service) { Query = "   " };
+        await using var dbContext = CreateContext();
+        var model = new IndexModel(dbContext, service);
+        model.Query = "   ";
 
         await model.OnGetAsync(CancellationToken.None);
 
@@ -44,6 +50,14 @@ public sealed class IndexModelTests
         Assert.Equal(BookSearchStatus.EmptyQuery, model.SearchResult!.Status);
         Assert.Equal(BookSearchResult.EmptyQueryMessage, model.SearchResult.Message);
         Assert.Null(service.LastQuery);
+    }
+
+    private static ApplicationDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase($"IndexModelTests-{Guid.NewGuid():N}")
+            .Options;
+        return new ApplicationDbContext(options);
     }
 
     private sealed class FakeGoogleBooksService : IGoogleBooksService
