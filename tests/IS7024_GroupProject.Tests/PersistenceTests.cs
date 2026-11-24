@@ -161,6 +161,54 @@ public sealed class PersistenceTests
     }
 
     [Fact]
+    public async Task DuplicateAdd_DoesNotChangeReadingStatusOrReview()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+        var user = CreateUser(1);
+        var book = new Book
+        {
+            Title = "The Martian",
+            Author = "Andy Weir",
+            GoogleBooksId = "the-martian"
+        };
+        var entry = new ReadingList
+        {
+            User = user,
+            Book = book,
+            Status = ReadingStatus.Reading
+        };
+        var review = new BookReview
+        {
+            User = user,
+            Book = book,
+            Rating = 4,
+            Summary = "An engaging read",
+            Review = "The story kept me interested."
+        };
+        context.Users.Add(user);
+        context.Books.Add(book);
+        context.ReadingLists.Add(entry);
+        context.BookReviews.Add(review);
+        await context.SaveChangesAsync();
+
+        var store = new Services.ReadingListStore(context);
+        bool added = await store.AddBookAsync(
+            user.Id,
+            "Forged Title",
+            "Forged Author",
+            book.GoogleBooksId);
+
+        Assert.False(added);
+        Assert.Equal(ReadingStatus.Reading, entry.Status);
+        Assert.Equal(4, review.Rating);
+        Assert.Equal("An engaging read", review.Summary);
+        Assert.Equal("The story kept me interested.", review.Review);
+        Assert.Single(await context.ReadingLists.ToListAsync());
+        Assert.Single(await context.BookReviews.ToListAsync());
+    }
+
+    [Fact]
     public async Task ReadingListEntryIncludesCoverTitleAndAuthor()
     {
         await using var connection = await CreateConnectionAsync();
