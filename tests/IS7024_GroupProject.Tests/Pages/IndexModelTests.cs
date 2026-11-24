@@ -5,6 +5,9 @@ using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Pages;
 using IS7024_GroupProject.Services.GoogleBooks;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -340,6 +343,7 @@ public sealed class IndexModelTests
     }
 
     private static IndexModel CreateModel(ApplicationDbContext dbContext, IGoogleBooksService service)
+
     {
         var model = new IndexModel(dbContext, service)
         {
@@ -392,6 +396,66 @@ public sealed class IndexModelTests
     }
 
     private sealed class FakeGoogleBooksService : IGoogleBooksService
+            [Fact]
+    public async Task OnPostAddToListAsync_WhenSignedOutChallengesAndDoesNotCreateEntries()
+    {
+        await using SqliteConnection connection = await CreateConnectionAsync();
+        await using var dbContext = CreateContext(connection);
+        var model = CreateModelWithUser(dbContext, new ClaimsPrincipal(new ClaimsIdentity()));
+
+        var result = await model.OnPostAddToListAsync(CancellationToken.None);
+
+        Assert.IsType<ChallengeResult>(result);
+        Assert.Empty(await dbContext.Books.ToListAsync());
+        Assert.Empty(await dbContext.ReadingLists.ToListAsync());
+    }
+
+    [Fact]
+    public async Task OnPostAddToListAsync_WhenInputIsInvalidReturnsBadRequest()
+    {
+        await using SqliteConnection connection = await CreateConnectionAsync();
+        await using var dbContext = CreateContext(connection);
+        dbContext.Users.Add(CreateUser(1));
+        await dbContext.SaveChangesAsync();
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "1")],
+            authenticationType: "Test"));
+        var model = CreateModelWithUser(dbContext, user);
+        model.AddToListInput = new IndexModel.BookInput();
+
+        var result = await model.OnPostAddToListAsync(CancellationToken.None);
+
+        Assert.IsType<BadRequestResult>(result);
+        Assert.Empty(await dbContext.Books.ToListAsync());
+        Assert.Empty(await dbContext.ReadingLists.ToListAsync());
+    }
+
+    private static IndexModel CreateModelWithUser(ApplicationDbContext dbContext, ClaimsPrincipal user)
+    {
+        var model = new IndexModel(dbContext, new FakeGoogleBooksService());
+        var services = new ServiceCollection()
+            .AddLogging()
+            .AddMvcCore()
+            .AddDataAnnotations()
+            .Services
+            .BuildServiceProvider();
+        var httpContext = new DefaultHttpContext
+        {
+            RequestServices = services,
+            User = user
+        };
+        var pageContext = new PageContext
+        {
+            HttpContext = httpContext
+        };
+        pageContext.ViewData = new ViewDataDictionary(
+            new EmptyModelMetadataProvider(),
+            pageContext.ModelState);
+        model.PageContext = pageContext;
+        return model;
+    }
+
     {
         public string? LastQuery { get; private set; }
 

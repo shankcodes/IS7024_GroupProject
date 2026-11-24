@@ -21,6 +21,7 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
         string title,
         string author,
         string googleBooksId,
+        string? coverUrl = null,
         CancellationToken cancellationToken = default)
     {
         var book = await dbContext.Books
@@ -32,6 +33,7 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
             {
                 Title = title,
                 Author = author,
+                CoverUrl = coverUrl,
                 GoogleBooksId = googleBooksId
             };
 

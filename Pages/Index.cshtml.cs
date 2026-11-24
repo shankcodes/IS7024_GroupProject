@@ -1,8 +1,9 @@
-
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Security.Claims;
 using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Models;
+using IS7024_GroupProject.Services;
 using IS7024_GroupProject.Services.GoogleBooks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,11 +17,19 @@ public sealed class IndexModel(ApplicationDbContext dbContext, IGoogleBooksServi
     public const string NoCoverUrl = "/images/no-cover.svg";
     public const string InvalidGoalMessage = "Goal must be at least 1 book.";
 
+    private readonly ReadingListStore readingListStore = new(dbContext);
+
     [BindProperty(SupportsGet = true)]
     public string? Query { get; set; }
 
     [BindProperty]
     public int? GoalTarget { get; set; }
+
+    [BindProperty]
+    public BookInput AddToListInput { get; set; } = new();
+
+    [TempData]
+    public string? StatusMessage { get; set; }
 
     public BookSearchResult? SearchResult { get; private set; }
 
@@ -202,5 +211,54 @@ public sealed class IndexModel(ApplicationDbContext dbContext, IGoogleBooksServi
                 User.FindFirstValue(ClaimTypes.NameIdentifier),
                 out userId)
             && userId > 0;
+    }
+
+    public async Task<IActionResult> OnPostAddToListAsync(CancellationToken cancellationToken)
+    {
+        if (!TryGetCurrentUserId(out int userId)
+            || !await dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken))
+        {
+            return Challenge();
+        }
+
+        if (!TryValidateModel(AddToListInput))
+        {
+            return BadRequest();
+        }
+
+        bool added = await readingListStore.AddBookAsync(
+            userId,
+            AddToListInput.Title,
+            AddToListInput.Author,
+            AddToListInput.GoogleBooksId,
+            AddToListInput.CoverUrl,
+            cancellationToken);
+
+        if (!added)
+        {
+            StatusMessage = "This book is already on your list.";
+            return RedirectToPage(new { Query });
+        }
+
+        StatusMessage = "Added to your list.";
+        return RedirectToPage("/ReadingList");
+    }
+
+    public sealed class BookInput
+    {
+        [Required]
+        [StringLength(250)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(250)]
+        public string Author { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+        public string GoogleBooksId { get; set; } = string.Empty;
+
+        [StringLength(2048)]
+        public string? CoverUrl { get; set; }
     }
 }
