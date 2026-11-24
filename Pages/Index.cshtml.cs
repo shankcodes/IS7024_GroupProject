@@ -1,3 +1,4 @@
+
 using System.Globalization;
 using System.Security.Claims;
 using IS7024_GroupProject.Data;
@@ -116,11 +117,13 @@ public sealed class IndexModel(ApplicationDbContext dbContext, IGoogleBooksServi
         return uri.AbsoluteUri;
     }
 
-    public static string GetMonthName(int month) => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
+    public static string GetMonthName(int month) =>
+        CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
 
     private async Task LoadDashboardAsync(CancellationToken cancellationToken)
     {
         CurrentYear = DateTime.Today.Year;
+
         if (!TryGetCurrentUserId(out int userId))
         {
             return;
@@ -129,20 +132,27 @@ public sealed class IndexModel(ApplicationDbContext dbContext, IGoogleBooksServi
         DateTime yearStart = new(CurrentYear, 1, 1);
         DateTime nextYearStart = yearStart.AddYears(1);
 
+        // Currently Reading: Show up to 5 books
         CurrentlyReading = await dbContext.ReadingLists
             .AsNoTracking()
             .Include(entry => entry.Book)
-            .Where(entry => entry.UserId == userId && entry.Status == ReadingStatus.Reading)
+            .Where(entry => entry.UserId == userId &&
+                            entry.Status == ReadingStatus.Reading)
             .OrderBy(entry => entry.Book.Title)
+            .Take(5)
             .ToListAsync(cancellationToken);
 
+        // Read Next: Show up to 5 books
         ReadNext = await dbContext.ReadingLists
             .AsNoTracking()
             .Include(entry => entry.Book)
-            .Where(entry => entry.UserId == userId && entry.Status == ReadingStatus.WantToRead)
+            .Where(entry => entry.UserId == userId &&
+                            entry.Status == ReadingStatus.WantToRead)
             .OrderBy(entry => entry.Book.Title)
+            .Take(5)
             .ToListAsync(cancellationToken);
 
+        // Recently Finished: Show the 5 most recently finished books
         RecentlyFinished = await dbContext.ReadingLists
             .AsNoTracking()
             .Include(entry => entry.Book)
@@ -151,27 +161,46 @@ public sealed class IndexModel(ApplicationDbContext dbContext, IGoogleBooksServi
                 && entry.FinishedDate >= yearStart
                 && entry.FinishedDate < nextYearStart)
             .OrderByDescending(entry => entry.FinishedDate)
+            .Take(5)
             .ToListAsync(cancellationToken);
+
         RecentlyFinishedByMonth = RecentlyFinished
             .GroupBy(entry => entry.FinishedDate!.Value.Month)
             .OrderByDescending(group => group.Key)
             .ToArray();
 
-        FinishedBookCount = RecentlyFinished.Count;
+        // Count ALL finished books for accurate reading goal progress
+        FinishedBookCount = await dbContext.ReadingLists
+            .AsNoTracking()
+            .CountAsync(entry => entry.UserId == userId
+                && entry.Status == ReadingStatus.Finished
+                && entry.FinishedDate >= yearStart
+                && entry.FinishedDate < nextYearStart,
+                cancellationToken);
+
         CurrentGoal = await dbContext.ReadingGoals
             .AsNoTracking()
-            .SingleOrDefaultAsync(goal => goal.UserId == userId && goal.Year == CurrentYear, cancellationToken);
+            .SingleOrDefaultAsync(
+                goal => goal.UserId == userId && goal.Year == CurrentYear,
+                cancellationToken);
 
         GoalProgressPercentage = CurrentGoal is { TargetBooks: > 0 }
-            ? Math.Min(100, (int)Math.Round(FinishedBookCount * 100d / CurrentGoal.TargetBooks, MidpointRounding.AwayFromZero))
+            ? Math.Min(
+                100,
+                (int)Math.Round(
+                    FinishedBookCount * 100d / CurrentGoal.TargetBooks,
+                    MidpointRounding.AwayFromZero))
             : 0;
     }
 
     private bool TryGetCurrentUserId(out int userId)
     {
         userId = 0;
+
         return User.Identity?.IsAuthenticated == true
-            && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId)
+            && int.TryParse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier),
+                out userId)
             && userId > 0;
     }
 }
