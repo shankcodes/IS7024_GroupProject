@@ -5,6 +5,11 @@
     ViewData["Title"] = "Home";
 }
 
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info" role="status">@Model.StatusMessage</div>
+}
+
 <section class="home-hero mb-4">
     <div class="home-hero-copy">
         <p class="eyebrow">A little more reading, a little more wonder</p>
@@ -19,12 +24,6 @@
         </div>
     </form>
 </section>
-
- @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
-    {
-        <div class="alert alert-info" role="status">@Model.StatusMessage</div>
-    }
-
 
 @if (Model.HasSearched && Model.SearchResult is not null && !Model.SearchResult.IsSuccess)
 {
@@ -47,24 +46,24 @@ else if (Model.SearchResult is { IsSuccess: true } searchResult)
                             <p class="book-description">@book.Description</p>
                         }
                         <p class="book-meta">ISBN: @book.Isbn13</p>
-                    </div>
-                             @if (User.Identity?.IsAuthenticated == true)
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
-<form method="post" asp-page-handler="AddToList" class="mt-auto">
-<input type="hidden" name="Query" value="@Model.Query" />
-<input type="hidden" asp-for="AddToListInput.Title" value="@book.Title" />
-<input type="hidden" asp-for="AddToListInput.Author" value="@book.Author" />
-<input type="hidden" asp-for="AddToListInput.GoogleBooksId" value="@book.GoogleBooksId" />
-<input type="hidden" asp-for="AddToListInput.CoverUrl" value="@book.CoverUrl" />
-<button type="submit" class="btn btn-primary w-100" aria-label="Add @book.Title to your list">Add to List</button>
-</form>
+                            <form method="post" asp-page-handler="AddToList" class="mt-auto">
+                                <input type="hidden" name="Query" value="@Model.Query" />
+                                <input type="hidden" asp-for="AddToListInput.Title" value="@book.Title" />
+                                <input type="hidden" asp-for="AddToListInput.Author" value="@book.Author" />
+                                <input type="hidden" asp-for="AddToListInput.GoogleBooksId" value="@book.GoogleBooksId" />
+                                <input type="hidden" asp-for="AddToListInput.CoverUrl" value="@book.CoverUrl" />
+                                <button type="submit" class="btn btn-primary w-100" aria-label="Add @book.Title to your list">Add to List</button>
+                            </form>
                         }
                         else
                         {
-<a class="btn btn-outline-primary w-100 mt-auto"
+                            <a class="btn btn-outline-primary w-100 mt-auto"
                                asp-area="Identity"
                                asp-page="/Account/Login">Sign in to add</a>
                         }
+                    </div>
                 </article>
             }
         </div>

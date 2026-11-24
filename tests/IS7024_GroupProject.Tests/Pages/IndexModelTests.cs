@@ -5,15 +5,15 @@ using IS7024_GroupProject.Data;
 using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Pages;
 using IS7024_GroupProject.Services.GoogleBooks;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace IS7024_GroupProject.Tests;
@@ -343,7 +343,6 @@ public sealed class IndexModelTests
     }
 
     private static IndexModel CreateModel(ApplicationDbContext dbContext, IGoogleBooksService service)
-
     {
         var model = new IndexModel(dbContext, service)
         {
@@ -395,8 +394,7 @@ public sealed class IndexModelTests
         return WebUtility.HtmlDecode(writer.ToString());
     }
 
-    private sealed class FakeGoogleBooksService : IGoogleBooksService
-            [Fact]
+    [Fact]
     public async Task OnPostAddToListAsync_WhenSignedOutChallengesAndDoesNotCreateEntries()
     {
         await using SqliteConnection connection = await CreateConnectionAsync();
@@ -456,6 +454,7 @@ public sealed class IndexModelTests
         return model;
     }
 
+    private sealed class FakeGoogleBooksService : IGoogleBooksService
     {
         public string? LastQuery { get; private set; }
 
