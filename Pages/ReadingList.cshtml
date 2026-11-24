@@ -6,6 +6,11 @@
 
 <h1>My Reading List</h1>
 
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+}
+
 <form method="post" class="mb-4">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="mb-3">
@@ -28,12 +33,37 @@
 
 <h2>Books</h2>
 
-<ul>
-@foreach (var entry in Model.Entries)
+@if (Model.Entries.Count == 0)
 {
-    <li>@entry.Book.Title by @entry.Book.Author (@entry.Status)</li>
+    <p>No books are on your list yet.</p>
 }
-</ul>
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @foreach (var entry in Model.Entries)
+    {
+        <div class="col">
+            <article class="card h-100 shadow-sm">
+                <div class="row g-0 h-100">
+                    <div class="col-4">
+                        <img src="@(!string.IsNullOrWhiteSpace(entry.Book.CoverUrl) ? entry.Book.CoverUrl : "/images/no-cover.svg")"
+                             class="img-fluid rounded-start h-100 object-fit-cover"
+                             alt="Cover of @entry.Book.Title"
+                             onerror="this.onerror=null;this.src='/images/no-cover.svg';" />
+                    </div>
+                    <div class="col-8">
+                        <div class="card-body">
+                            <h3 class="card-title h5">@entry.Book.Title</h3>
+                            <p class="card-text mb-1">@entry.Book.Author</p>
+                            <p class="card-text small text-muted">@entry.Status</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    }
+    </div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

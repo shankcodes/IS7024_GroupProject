@@ -15,6 +15,9 @@ public sealed class ReadingListModel(
 {
     public IReadOnlyList<ReadingList> Entries { get; private set; } = [];
 
+    [TempData]
+    public string? StatusMessage { get; set; }
+
     [BindProperty]
     public BookInput Input { get; set; } = new();
 
@@ -37,13 +40,14 @@ public sealed class ReadingListModel(
             return Challenge();
         }
 
-        await readingListStore.AddBookAsync(
+        bool added = await readingListStore.AddBookAsync(
             user.Id,
             Input.Title.Trim(),
             Input.Author.Trim(),
             Input.GoogleBooksId.Trim(),
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
+        StatusMessage = added ? "Added to your list." : "This book is already on your list.";
         return RedirectToPage();
     }
 

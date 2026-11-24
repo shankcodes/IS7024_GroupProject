@@ -278,7 +278,61 @@ Database migrations create the Identity tables and application tables. Pending m
 
 ## Database
  
-A small SQLite database, built with Entity Framework Core, stores books, each reader's reading list, reviews, and goals. Ratings and reviews are stored per book, so BookNest can show the average rating from all readers. Over time, this builds BookNest's own collection of reader reviews.
+An Azure SQL Database, accessed through Entity Framework Core, stores books, each reader's reading list, reviews, and goals. Ratings and reviews are stored per book, so BookNest can show the average rating from all readers. Over time, this builds BookNest's own collection of reader reviews.
+
+### Local database setup
+
+The current Azure SQL target is:
+
+- Server: `booknest-db-server.database.windows.net`
+- Database: `bookNest-db`
+
+Set the SQL Server connection string in .NET User Secrets from the project directory.
+Replace the placeholders with credentials provided securely by the team; do not
+commit real credentials to `appsettings.json` or source control.
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=tcp:booknest-db-server.database.windows.net,1433;Initial Catalog=bookNest-db;Persist Security Info=False;User ID=<username>;Password=<password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+```
+
+For Azure App Service, set `ConnectionStrings:DefaultConnection` in the app's
+configuration (or use managed identity and Azure SQL permissions). The SQL
+server firewall currently allows all traffic; restrict it to the app's network
+and approved developer IP addresses before production use.
+
+### Connect with the VS Code SQL Server extension
+
+1. In VS Code, open **Extensions** (`Ctrl+Shift+X`), search for **SQL Server
+   (mssql)** by Microsoft, and install it.
+2. Open the Command Palette (`Ctrl+Shift+P`) and run **MS SQL: Connect**. If
+   prompted to create a connection profile, enter:
+   - **Server name:** `booknest-db-server.database.windows.net`
+   - **Authentication type:** `SQL Login` (or Microsoft Entra authentication
+     if your account has been configured for it)
+   - **User name:** the SQL login supplied by the team
+   - **Password:** enter it at the prompt; do not put it in this README or
+     source control
+   - **Database:** `bookNest-db`
+   - **Encrypt:** enabled; **Trust server certificate:** disabled
+3. Connect and open a `.sql` file. Confirm the selected database before running
+   queries:
+
+```sql
+SELECT DB_NAME() AS CurrentDatabase;
+
+SELECT [name]
+FROM sys.tables
+ORDER BY [name];
+```
+
+To check a registered account, replace the example address with the account's
+email. Avoid selecting `PasswordHash` or other authentication data:
+
+```sql
+SELECT [Id], [UserName], [Email], [EmailConfirmed]
+FROM [dbo].[AspNetUsers]
+WHERE [Email] = N'reader@example.com';
+```
  
 **Naming conventions** (standard C# and Entity Framework Core):
  
