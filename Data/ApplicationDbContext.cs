@@ -66,7 +66,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .HasOne(reviewComment => reviewComment.User)
             .WithMany(user => user.ReviewComments)
             .HasForeignKey(reviewComment => reviewComment.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<ReviewComment>()
             .Property(reviewComment => reviewComment.ModerationStatus)
@@ -82,6 +82,6 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             .HasOne(reviewLike => reviewLike.User)
             .WithMany(user => user.ReviewLikes)
             .HasForeignKey(reviewLike => reviewLike.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

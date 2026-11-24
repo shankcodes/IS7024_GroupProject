@@ -116,7 +116,7 @@ BookReview 1 --- many ReviewLike
 - Composite primary key `(ReadingGoal.UserId, ReadingGoal.Year)`
 - Unique `(BookReview.UserId, BookReview.BookId)`
 - Unique `(ReviewLike.UserId, ReviewLike.BookReviewId)`
-- Enum values stored as readable text in SQLite
+- Enum values stored as readable text in SQL Server
 - Cascading relationships from users and books to their owned records
 
 ## Design Notes
@@ -126,4 +126,4 @@ BookReview 1 --- many ReviewLike
 - Review aggregates such as average rating and review count should be calculated from approved reviews.
 - Authorization must filter reading lists, goals, reviews, comments, and likes by the authenticated user's ID where appropriate.
 - The `Admin` role is available for application-level moderation. It should not be treated as unrestricted database access.
-- Migrations in `Data/Migrations` are the source of truth for creating and updating the SQLite schema.
+- Migrations in `Migrations` are the source of truth for creating and updating the SQL Server schema.
