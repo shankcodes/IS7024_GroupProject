@@ -1,79 +1,174 @@
 ﻿@page
 @model IndexModel
+@using IS7024_GroupProject.Models
 @{
-    ViewData["Title"] = "Search Books";
+    ViewData["Title"] = "Home";
 }
 
-<div class="py-4">
-    <h1>Find your next book</h1>
-    <p class="lead">Search by title or author to discover books for your reading list.</p>
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info" role="status">@Model.StatusMessage</div>
+}
 
-    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
-    {
-        <div class="alert alert-info" role="status">@Model.StatusMessage</div>
-    }
-
-    <form method="get" class="row g-3 mb-5" role="search">
-        <div class="col-md-9">
-            <label asp-for="Query" class="form-label">Title or author</label>
-            <input asp-for="Query" class="form-control" placeholder="Example: The Hobbit or Andy Weir" autofocus />
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Search</button>
+<section class="home-hero mb-4">
+    <div class="home-hero-copy">
+        <p class="eyebrow">A little more reading, a little more wonder</p>
+        <h1>Make room for your next chapter.</h1>
+        <p class="lead">Find a book, follow your reading, and keep your next good read close.</p>
+    </div>
+    <form method="get" class="home-search" role="search">
+        <label asp-for="Query" class="form-label">Search books by title, author, or keyword</label>
+        <div class="home-search-controls">
+            <input asp-for="Query" class="form-control" placeholder="Try The Hobbit or Andy Weir" />
+            <button type="submit" class="btn btn-primary">Search books</button>
         </div>
     </form>
+</section>
 
-    @if (Model.HasSearched && Model.SearchResult is not null && !Model.SearchResult.IsSuccess)
-    {
-        <p class="alert alert-info" role="status">@Model.SearchResult.Message</p>
-    }
-    else if (Model.SearchResult is { IsSuccess: true } searchResult)
-    {
-        <h2 class="mb-4">Search results</h2>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+@if (Model.HasSearched && Model.SearchResult is not null && !Model.SearchResult.IsSuccess)
+{
+    <p class="alert alert-info" role="status">@Model.SearchResult.Message</p>
+}
+else if (Model.SearchResult is { IsSuccess: true } searchResult)
+{
+    <section class="dashboard-section mb-4" aria-labelledby="search-results-heading">
+        <div class="section-heading"><div><p class="eyebrow">Your discovery</p><h2 id="search-results-heading">Search results</h2></div></div>
+        <div class="book-grid">
             @foreach (var book in searchResult.Books)
             {
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="row g-0 h-100">
-                            <div class="col-4">
-                                <img src="@book.CoverUrl"
-                                     class="img-fluid rounded-start h-100 object-fit-cover"
-                                     onerror="this.onerror=null;this.src='/images/no-cover.svg'"
-                                     alt="Cover of @book.Title" />
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body d-flex flex-column h-100">
-                                    <h3 class="card-title h5">@book.Title</h3>
-                                    <p class="card-text mb-2">@book.Author</p>
-                                    <p class="card-text small text-muted mt-auto">ISBN: @book.Isbn13</p>
-                                    @if (!string.IsNullOrWhiteSpace(book.Description))
-                                    {
-                                        <p class="card-text small">@book.Description</p>
-                                    }
-                                    @if (User.Identity?.IsAuthenticated == true)
-                                    {
-                                        <form method="post" asp-page-handler="AddToList" class="mt-auto">
-                                            <input type="hidden" name="Query" value="@Model.Query" />
-                                            <input type="hidden" asp-for="AddToListInput.Title" value="@book.Title" />
-                                            <input type="hidden" asp-for="AddToListInput.Author" value="@book.Author" />
-                                            <input type="hidden" asp-for="AddToListInput.GoogleBooksId" value="@book.GoogleBooksId" />
-                                            <input type="hidden" asp-for="AddToListInput.CoverUrl" value="@book.CoverUrl" />
-                                            <button type="submit" class="btn btn-primary w-100">Add to List</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <a class="btn btn-outline-primary w-100 mt-auto"
-                                           asp-area="Identity"
-                                           asp-page="/Account/Login">Sign in to add</a>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
+                <article class="book-card search-book-card">
+                    <div class="book-cover-wrap">@IndexModel.CreateCoverImage(book.CoverUrl, book.Title, "book-cover")</div>
+                    <div class="book-card-body">
+                        <h3>@book.Title</h3>
+                        <p class="book-author">@book.Author</p>
+                        @if (!string.IsNullOrWhiteSpace(book.Description))
+                        {
+                            <p class="book-description">@book.Description</p>
+                        }
+                        <p class="book-meta">ISBN: @book.Isbn13</p>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form method="post" asp-page-handler="AddToList" class="mt-auto">
+                                <input type="hidden" name="Query" value="@Model.Query" />
+                                <input type="hidden" asp-for="AddToListInput.Title" value="@book.Title" />
+                                <input type="hidden" asp-for="AddToListInput.Author" value="@book.Author" />
+                                <input type="hidden" asp-for="AddToListInput.GoogleBooksId" value="@book.GoogleBooksId" />
+                                <input type="hidden" asp-for="AddToListInput.CoverUrl" value="@book.CoverUrl" />
+                                <button type="submit" class="btn btn-primary w-100" aria-label="Add @book.Title to your list">Add to List</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-primary w-100 mt-auto"
+                               asp-area="Identity"
+                               asp-page="/Account/Login">Sign in to add</a>
+                        }
+                    </div>
+                </article>
             }
         </div>
-    }
-</div>
+    </section>
+}
+
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <section class="signed-out-panel dashboard-section" aria-labelledby="welcome-heading">
+        <div><p class="eyebrow">Your reading life</p><h2 id="welcome-heading">Your personal dashboard is waiting</h2><p>Sign in to see your reading list, yearly goal, and books you have finished.</p></div>
+        <a class="btn btn-outline-primary" asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+    </section>
+}
+else
+{
+    <section class="goal-card dashboard-section mb-4" aria-labelledby="goal-heading">
+        <div class="goal-summary">
+            <p class="eyebrow">Your reading year</p>
+            <h2 id="goal-heading">Reading goal <span>@Model.CurrentYear</span></h2>
+            @if (Model.CurrentGoal is not null)
+            {
+                <p class="goal-count">@Model.FinishedBookCount of @Model.CurrentGoal.TargetBooks books read</p>
+                <div class="progress goal-progress" role="progressbar" aria-label="Reading goal progress" aria-valuenow="@Model.GoalProgressPercentage" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" style="width: @Model.GoalProgressPercentage%"></div>
+                </div>
+                <p class="goal-percent">@Model.GoalProgressPercentage% of your goal</p>
+            }
+            else
+            {
+                <p class="goal-count">@Model.FinishedBookCount books finished this year</p>
+                <p class="goal-empty">No goal set yet. Choose a target to start tracking this year.</p>
+            }
+        </div>
+        <form method="post" asp-page-handler="SaveGoal" class="goal-form">
+            <label asp-for="GoalTarget" class="form-label">@(Model.CurrentGoal is null ? "Set a yearly target" : "Update your target")</label>
+            <div class="goal-input-row"><input asp-for="GoalTarget" class="form-control" type="number" min="1" placeholder="Books per year" /><button class="btn btn-primary" type="submit">Save goal</button></div>
+            <span asp-validation-for="GoalTarget" class="text-danger"></span>
+        </form>
+    </section>
+
+    <div class="dashboard-grid">
+        <section class="dashboard-section" aria-labelledby="currently-reading-heading">
+            <div class="section-heading"><div><p class="eyebrow">On your nightstand</p><h2 id="currently-reading-heading">Currently Reading</h2></div></div>
+            @if (Model.CurrentlyReading.Count == 0)
+            {
+                <p class="empty-state">Nothing on your nightstand yet. <a asp-page="/Index">Search for a book</a> to get started.</p>
+            }
+            else
+            {
+                <div class="compact-book-list">
+                    @foreach (ReadingList entry in Model.CurrentlyReading)
+                    {
+                        <article class="compact-book-card">
+                            <div class="compact-cover">@IndexModel.CreateCoverImage(entry.Book.CoverUrl, entry.Book.Title, "book-cover")</div>
+                            <div><h3>@entry.Book.Title</h3><p>@entry.Book.Author</p></div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="dashboard-section" aria-labelledby="read-next-heading">
+            <div class="section-heading"><div><p class="eyebrow">Saved for later</p><h2 id="read-next-heading">Read Next</h2></div><a asp-page="/ReadingList" class="text-link">My list</a></div>
+            @if (Model.ReadNext.Count == 0)
+            {
+                <p class="empty-state">Your next read is waiting to be found. <a asp-page="/Index">Search for a book</a>.</p>
+            }
+            else
+            {
+                <div class="compact-book-list">
+                    @foreach (ReadingList entry in Model.ReadNext)
+                    {
+                        <article class="compact-book-card">
+                            <div class="compact-cover">@IndexModel.CreateCoverImage(entry.Book.CoverUrl, entry.Book.Title, "book-cover")</div>
+                            <div><h3>@entry.Book.Title</h3><p>@entry.Book.Author</p></div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+
+    <section class="dashboard-section mt-4" aria-labelledby="recent-reading-heading">
+        <div class="section-heading"><div><p class="eyebrow">Your year in books</p><h2 id="recent-reading-heading">Recently Finished</h2></div><span class="year-label">@Model.CurrentYear</span></div>
+        @if (Model.RecentlyFinished.Count == 0)
+        {
+            <p class="empty-state">Finished books with a recorded date this year will appear here. No reading activity is inferred.</p>
+        }
+        else
+        {
+            @foreach (var month in Model.RecentlyFinishedByMonth)
+            {
+                <div class="finished-month">
+                    <h3>@IndexModel.GetMonthName(month.Key)</h3>
+                    <div class="book-grid finished-grid">
+                        @foreach (ReadingList entry in month)
+                        {
+                            <article class="compact-book-card finished-book-card">
+                                <div class="compact-cover">@IndexModel.CreateCoverImage(entry.Book.CoverUrl, entry.Book.Title, "book-cover")</div>
+                                <div><h4>@entry.Book.Title</h4><p>@entry.Book.Author</p></div>
+                            </article>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </section>
+}
