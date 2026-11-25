@@ -35,8 +35,8 @@ public sealed class ReadingListModel(
     public async Task<IActionResult> OnPostUpdateStatusAsync(
         CancellationToken cancellationToken)
     {
-        // Ignore validation errors from the unrelated Remove form
-        RemoveUnrelatedModelState(nameof(RemoveInput));
+        // Both forms are bound on every POST; validate only this form's input below
+        ModelState.Clear();
 
         // Validate the selected book
         if (StatusInput.ReadingListId < 1)
@@ -85,8 +85,8 @@ public sealed class ReadingListModel(
     public async Task<IActionResult> OnPostRemoveAsync(
         CancellationToken cancellationToken)
     {
-        // Ignore validation errors from the unrelated Status form
-        RemoveUnrelatedModelState(nameof(StatusInput));
+        // Both forms are bound on every POST; validate only this form's input below
+        ModelState.Clear();
 
         // Validate the selected book
         if (RemoveInput.ReadingListId < 1)
