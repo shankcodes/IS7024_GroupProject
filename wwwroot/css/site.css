@@ -147,3 +147,10 @@ body {
   .signed-out-panel { align-items: flex-start; flex-direction: column; }
   .section-heading { align-items: flex-start; }
 }
+
+.book-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: contain;
+}

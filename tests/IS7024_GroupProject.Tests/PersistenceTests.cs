@@ -279,6 +279,65 @@ public sealed class PersistenceTests
     }
 
     [Fact]
+    public async Task UpdateStatus_FinishedToFinished_PreservesOriginalDate()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+
+        var user = CreateUser(1);
+
+        var book = new Book
+        {
+            Title = "The Martian",
+            Author = "Andy Weir",
+            GoogleBooksId = "the-martian-finished-test"
+        };
+
+        var originalDate = DateTime.Today.AddDays(-30);
+
+        var entry = new ReadingList
+        {
+            User = user,
+            Book = book,
+            Status = ReadingStatus.Finished,
+            FinishedDate = originalDate
+        };
+
+        context.Users.Add(user);
+        context.Books.Add(book);
+        context.ReadingLists.Add(entry);
+
+        await context.SaveChangesAsync();
+
+        var store = new ReadingListStore(context);
+
+        // Save Finished again without changing the status
+        bool updated = await store.UpdateStatusAsync(
+            user.Id,
+            entry.ReadingListId,
+            ReadingStatus.Finished);
+
+        // Verify that the update succeeds
+        Assert.True(updated);
+
+        // Verify the status remains Finished
+        Assert.Equal(ReadingStatus.Finished, entry.Status);
+
+        // Verify the original finished date is preserved
+        Assert.Equal(originalDate, entry.FinishedDate);
+
+        // Verify that the original date is still saved in the database
+        await using var verificationContext =
+            await CreateContextAsync(connection);
+
+        var savedEntry = await verificationContext.ReadingLists
+            .SingleAsync(item =>
+                item.ReadingListId == entry.ReadingListId);
+
+        Assert.Equal(originalDate, savedEntry.FinishedDate);
+    }
+
+    [Fact]
     public async Task UpdateStatus_RejectsUnsupportedStatusAndOtherUsersEntry()
     {
         await using var connection = await CreateConnectionAsync();

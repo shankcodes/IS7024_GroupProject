@@ -83,10 +83,16 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
             return false;
         }
 
-        readingList.Status = status;
-        readingList.FinishedDate = status == ReadingStatus.Finished
-            ? DateTime.Today
-            : null;
+
+        if (readingList.Status != status)
+        {
+            readingList.Status = status;
+
+            readingList.FinishedDate = status == ReadingStatus.Finished
+                ? DateTime.Today
+                : null;
+        }
+
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
