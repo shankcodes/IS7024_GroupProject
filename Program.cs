@@ -20,13 +20,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 errorNumbersToAdd: null);
         }));
 builder.Services.AddDefaultIdentity<User>(options =>
-    {
-        options.User.RequireUniqueEmail = true;
-    })
+{
+    options.User.RequireUniqueEmail = true;
+})
     .AddRoles<IdentityRole<int>>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddScoped<ReadingListStore>();
-builder.Services.AddSingleton<ShortcutEntryStore>();
 
 // BN-6: Google Books search. The API key comes from user secrets ("GoogleBooks:ApiKey").
 builder.Services.Configure<GoogleBooksOptions>(

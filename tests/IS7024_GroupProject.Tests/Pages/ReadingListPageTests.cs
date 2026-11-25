@@ -26,7 +26,9 @@ public sealed class ReadingListPageTests
 
         Assert.Contains("asp-page-handler=\"Remove\"", page);
         Assert.Contains("RemoveInput.ReadingListId", page);
-        Assert.Contains("Your list is empty. Search for a book to get started.", page);
+        Assert.Contains("Your list is empty.", page);
+        Assert.Contains("<a asp-page=\"/Index\">Search for a book</a>", page);
+        Assert.Contains("to get started.", page);
         Assert.Contains("FinishedDate", page);
     }
 
