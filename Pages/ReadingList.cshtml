@@ -1,70 +1,175 @@
 @page
 @model ReadingListModel
+@using IS7024_GroupProject.Models
+
+
 @{
     ViewData["Title"] = "My Reading List";
 }
 
-<h1>My Reading List</h1>
+<h1 class="mb-4">My Reading List</h1>
 
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
-    <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+    <div class="alert alert-success" role="status">
+        @Model.StatusMessage
+    </div>
 }
 
+<!-- Add Book Form -->
 <form method="post" class="mb-4">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger"></div>
+
     <div class="mb-3">
         <label asp-for="Input.Title" class="form-label"></label>
         <input asp-for="Input.Title" class="form-control" />
-        <span asp-validation-for="Input.Title" class="text-danger"></span>
+        <span asp-validation-for="Input.Title"
+              class="text-danger"></span>
     </div>
+
     <div class="mb-3">
         <label asp-for="Input.Author" class="form-label"></label>
         <input asp-for="Input.Author" class="form-control" />
-        <span asp-validation-for="Input.Author" class="text-danger"></span>
+        <span asp-validation-for="Input.Author"
+              class="text-danger"></span>
     </div>
+
     <div class="mb-3">
         <label asp-for="Input.GoogleBooksId" class="form-label"></label>
-        <input asp-for="Input.GoogleBooksId" class="form-control" />
-        <span asp-validation-for="Input.GoogleBooksId" class="text-danger"></span>
+        <input asp-for="Input.GoogleBooksId"
+               class="form-control" />
+        <span asp-validation-for="Input.GoogleBooksId"
+              class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Add to list</button>
+
+    <button type="submit" class="btn btn-primary">
+        Add to list
+    </button>
 </form>
 
-<h2>Books</h2>
+<h2 class="mb-3">Books</h2>
 
 @if (Model.Entries.Count == 0)
 {
-    <p>No books are on your list yet.</p>
+    <div class="alert alert-info">
+        Your list is empty. Search for a book to get started.
+    </div>
 }
 else
 {
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    @foreach (var entry in Model.Entries)
-    {
-        <div class="col">
-            <article class="card h-100 shadow-sm">
-                <div class="row g-0 h-100">
-                    <div class="col-4">
-                        <img src="@(!string.IsNullOrWhiteSpace(entry.Book.CoverUrl) ? entry.Book.CoverUrl : "/images/no-cover.svg")"
-                             class="img-fluid rounded-start h-100 object-fit-cover"
-                             alt="Cover of @entry.Book.Title"
-                             onerror="this.onerror=null;this.src='/images/no-cover.svg';" />
-                    </div>
-                    <div class="col-8">
-                        <div class="card-body">
-                            <h3 class="card-title h5">@entry.Book.Title</h3>
-                            <p class="card-text mb-1">@entry.Book.Author</p>
-                            <p class="card-text small text-muted">@entry.Status</p>
+
+        @foreach (var entry in Model.Entries)
+        {
+            <div class="col">
+                <article class="card h-100 shadow-sm">
+                    <div class="row g-0 h-100">
+
+                        <!-- Book Cover -->
+                        <div class="col-4">
+                            <img src="@(!string.IsNullOrWhiteSpace(entry.Book.CoverUrl)
+                                                            ? entry.Book.CoverUrl
+                                                            : "/images/no-cover.svg")"
+                                 class="img-fluid rounded-start h-100 object-fit-cover"
+                                 alt="Cover of @entry.Book.Title"
+                                 onerror="this.onerror=null;this.src='/images/no-cover.svg';" />
                         </div>
+
+                        <div class="col-8">
+                            <div class="card-body">
+
+                                <!-- Book Details -->
+                                <h3 class="card-title h5">
+                                    @entry.Book.Title
+                                </h3>
+
+                                <p class="card-text mb-1">
+                                    @entry.Book.Author
+                                </p>
+
+                                <p class="card-text small text-muted">
+                                    Status: @entry.Status
+                                </p>
+
+                                <!-- Update Reading Status -->
+                                <form method="post"
+                                      asp-page-handler="UpdateStatus"
+                                      class="mt-3">
+
+                                    <input type="hidden"
+                                           name="StatusInput.ReadingListId"
+                                           value="@entry.ReadingListId" />
+
+                                    <label for="status-@entry.ReadingListId"
+                                           class="form-label">
+                                        Reading status
+                                    </label>
+
+                                    <select name="StatusInput.Status"
+                                            id="status-@entry.ReadingListId"
+                                            class="form-select"
+                                            aria-label="Reading status for @entry.Book.Title">
+
+                                        <option value="WantToRead"
+                                                selected="@(entry.Status == ReadingStatus.WantToRead)">
+                                            Want to Read
+                                        </option>
+
+                                        <option value="Reading"
+                                                selected="@(entry.Status == ReadingStatus.Reading)">
+                                            Reading
+                                        </option>
+
+                                        <option value="Finished"
+                                                selected="@(entry.Status == ReadingStatus.Finished)">
+                                            Finished
+                                        </option>
+
+                                    </select>
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-sm mt-2">
+                                        Save status
+                                    </button>
+                                </form>
+
+                                <!-- Finished Date -->
+                                @if (entry.FinishedDate is not null)
+                                {
+                                    <p class="card-text small text-muted mt-2">
+                                        Finished:
+                                        @entry.FinishedDate.Value.ToString("d")
+                                    </p>
+                                }
+
+                                <!-- Remove Book -->
+                                <form method="post"
+                                      asp-page-handler="Remove"
+                                      class="mt-2">
+
+                                    <input type="hidden"
+                                           name="RemoveInput.ReadingListId"
+                                           value="@entry.ReadingListId" />
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger btn-sm">
+                                        Remove
+                                    </button>
+                                </form>
+
+                            </div>
+                        </div>
+
                     </div>
-                </div>
-            </article>
-        </div>
-    }
+                </article>
+            </div>
+        }
+
     </div>
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+    

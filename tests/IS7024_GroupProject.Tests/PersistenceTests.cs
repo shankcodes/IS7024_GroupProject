@@ -240,6 +240,115 @@ public sealed class PersistenceTests
         Assert.Equal("https://covers.example/dune.jpg", entry.Book.CoverUrl);
     }
 
+    [Fact]
+    public async Task UpdateStatus_SetsAndClearsFinishedDateForTheOwnedEntry()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+        var user = CreateUser(1);
+        var book = new Book
+        {
+            Title = "The Martian",
+            Author = "Andy Weir",
+            GoogleBooksId = "the-martian-status"
+        };
+        var entry = new ReadingList
+        {
+            User = user,
+            Book = book,
+            Status = ReadingStatus.WantToRead
+        };
+        context.Users.Add(user);
+        context.Books.Add(book);
+        context.ReadingLists.Add(entry);
+        await context.SaveChangesAsync();
+
+        var store = new ReadingListStore(context);
+
+        Assert.True(await store.UpdateStatusAsync(user.Id, entry.ReadingListId, ReadingStatus.Reading));
+        Assert.Equal(ReadingStatus.Reading, entry.Status);
+        Assert.Null(entry.FinishedDate);
+
+        Assert.True(await store.UpdateStatusAsync(user.Id, entry.ReadingListId, ReadingStatus.Finished));
+        Assert.Equal(ReadingStatus.Finished, entry.Status);
+        Assert.Equal(DateTime.Today, entry.FinishedDate);
+
+        Assert.True(await store.UpdateStatusAsync(user.Id, entry.ReadingListId, ReadingStatus.WantToRead));
+        Assert.Equal(ReadingStatus.WantToRead, entry.Status);
+        Assert.Null(entry.FinishedDate);
+    }
+
+    [Fact]
+    public async Task UpdateStatus_RejectsUnsupportedStatusAndOtherUsersEntry()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+        var user = CreateUser(1);
+        var otherUser = CreateUser(2);
+        var book = new Book
+        {
+            Title = "The Martian",
+            Author = "Andy Weir",
+            GoogleBooksId = "the-martian-ownership"
+        };
+        var entry = new ReadingList
+        {
+            User = otherUser,
+            Book = book,
+            Status = ReadingStatus.WantToRead
+        };
+        context.Users.AddRange(user, otherUser);
+        context.Books.Add(book);
+        context.ReadingLists.Add(entry);
+        await context.SaveChangesAsync();
+
+        var store = new ReadingListStore(context);
+
+        Assert.False(await store.UpdateStatusAsync(user.Id, entry.ReadingListId, (ReadingStatus)999));
+        Assert.False(await store.UpdateStatusAsync(user.Id, entry.ReadingListId, ReadingStatus.Reading));
+        Assert.Equal(ReadingStatus.WantToRead, entry.Status);
+        Assert.Null(entry.FinishedDate);
+    }
+
+    [Fact]
+    public async Task RemoveBook_RemovesOnlyOwnedEntryAndPreservesSharedBook()
+    {
+        await using var connection = await CreateConnectionAsync();
+        await using var context = await CreateContextAsync(connection);
+        var user = CreateUser(1);
+        var otherUser = CreateUser(2);
+        var book = new Book
+        {
+            Title = "The Martian",
+            Author = "Andy Weir",
+            GoogleBooksId = "the-martian-remove"
+        };
+        var userEntry = new ReadingList
+        {
+            User = user,
+            Book = book,
+            Status = ReadingStatus.Reading
+        };
+        var otherEntry = new ReadingList
+        {
+            User = otherUser,
+            Book = book,
+            Status = ReadingStatus.WantToRead
+        };
+        context.Users.AddRange(user, otherUser);
+        context.Books.Add(book);
+        context.ReadingLists.AddRange(userEntry, otherEntry);
+        await context.SaveChangesAsync();
+
+        var store = new ReadingListStore(context);
+
+        Assert.False(await store.RemoveBookAsync(user.Id, otherEntry.ReadingListId));
+        Assert.True(await store.RemoveBookAsync(user.Id, userEntry.ReadingListId));
+        Assert.False(await context.ReadingLists.AnyAsync(entry => entry.ReadingListId == userEntry.ReadingListId));
+        Assert.True(await context.ReadingLists.AnyAsync(entry => entry.ReadingListId == otherEntry.ReadingListId));
+        Assert.True(await context.Books.AnyAsync(existingBook => existingBook.BookId == book.BookId));
+    }
+
     private static async Task<SqliteConnection> CreateConnectionAsync()
     {
         var connection = new SqliteConnection("Data Source=:memory:");

@@ -61,4 +61,54 @@ public sealed class ReadingListStore(ApplicationDbContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<bool> UpdateStatusAsync(
+        int userId,
+        int readingListId,
+        ReadingStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(status))
+        {
+            return false;
+        }
+
+        var readingList = await dbContext.ReadingLists
+            .SingleOrDefaultAsync(
+                entry => entry.ReadingListId == readingListId && entry.UserId == userId,
+                cancellationToken);
+
+        if (readingList is null)
+        {
+            return false;
+        }
+
+        readingList.Status = status;
+        readingList.FinishedDate = status == ReadingStatus.Finished
+            ? DateTime.Today
+            : null;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> RemoveBookAsync(
+        int userId,
+        int readingListId,
+        CancellationToken cancellationToken = default)
+    {
+        var readingList = await dbContext.ReadingLists
+            .SingleOrDefaultAsync(
+                entry => entry.ReadingListId == readingListId && entry.UserId == userId,
+                cancellationToken);
+
+        if (readingList is null)
+        {
+            return false;
+        }
+
+        dbContext.ReadingLists.Remove(readingList);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }

@@ -1,3 +1,4 @@
+
 using System.ComponentModel.DataAnnotations;
 using IS7024_GroupProject.Models;
 using IS7024_GroupProject.Services;
@@ -21,14 +22,26 @@ public sealed class ReadingListModel(
     [BindProperty]
     public BookInput Input { get; set; } = new();
 
+    [BindProperty]
+    public StatusFormInput StatusInput { get; set; } = new();
+
+    [BindProperty]
+    public RemoveFormInput RemoveInput { get; set; } = new();
+
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         await LoadEntriesAsync(cancellationToken);
     }
 
-    public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
+    // Add a book to My List
+    public async Task<IActionResult> OnPostAsync(
+        CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+        // Validate only the Add Book form
+        ModelState.Remove(nameof(StatusInput));
+        ModelState.Remove(nameof(RemoveInput));
+
+        if (!TryValidateModel(Input, nameof(Input)))
         {
             await LoadEntriesAsync(cancellationToken);
             return Page();
@@ -47,19 +60,108 @@ public sealed class ReadingListModel(
             Input.GoogleBooksId.Trim(),
             cancellationToken: cancellationToken);
 
-        StatusMessage = added ? "Added to your list." : "This book is already on your list.";
+        StatusMessage = added
+            ? "Added to your list."
+            : "This book is already on your list.";
+
         return RedirectToPage();
     }
 
-    private async Task LoadEntriesAsync(CancellationToken cancellationToken)
+    // Update the status of a saved book
+    public async Task<IActionResult> OnPostUpdateStatusAsync(
+        CancellationToken cancellationToken)
+    {
+        // Clear unrelated form validation
+        ModelState.Clear();
+
+        if (StatusInput.ReadingListId < 1)
+        {
+            ModelState.AddModelError(
+                "StatusInput.ReadingListId",
+                "Invalid book selection.");
+        }
+
+        if (StatusInput.Status is null ||
+            !Enum.IsDefined(StatusInput.Status.Value))
+        {
+            ModelState.AddModelError(
+                "StatusInput.Status",
+                "Select a valid reading status.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await LoadEntriesAsync(cancellationToken);
+            return Page();
+        }
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        bool updated = await readingListStore.UpdateStatusAsync(
+            user.Id,
+            StatusInput.ReadingListId,
+            StatusInput.Status!.Value,
+            cancellationToken);
+
+        StatusMessage = updated
+            ? "Reading status updated."
+            : "That book could not be found on your list.";
+
+        return RedirectToPage();
+    }
+
+    // Remove a saved book
+    public async Task<IActionResult> OnPostRemoveAsync(
+        CancellationToken cancellationToken)
+    {
+        // Clear unrelated form validation
+        ModelState.Clear();
+
+        if (RemoveInput.ReadingListId < 1)
+        {
+            ModelState.AddModelError(
+                "RemoveInput.ReadingListId",
+                "Invalid book selection.");
+
+            await LoadEntriesAsync(cancellationToken);
+            return Page();
+        }
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        bool removed = await readingListStore.RemoveBookAsync(
+            user.Id,
+            RemoveInput.ReadingListId,
+            cancellationToken);
+
+        StatusMessage = removed
+            ? "Removed from your list."
+            : "That book could not be found on your list.";
+
+        return RedirectToPage();
+    }
+
+    // Load books belonging to the signed-in user
+    private async Task LoadEntriesAsync(
+        CancellationToken cancellationToken)
     {
         var user = await userManager.GetUserAsync(User);
+
         if (user is not null)
         {
             Entries = await readingListStore.GetForUserAsync(user.Id);
         }
     }
 
+    // Add Book form
     public sealed class BookInput
     {
         [Required]
@@ -75,4 +177,21 @@ public sealed class ReadingListModel(
         [Display(Name = "Google Books ID")]
         public string GoogleBooksId { get; set; } = string.Empty;
     }
+
+    // Update Status form
+    public sealed class StatusFormInput
+    {
+        [Range(1, int.MaxValue)]
+        public int ReadingListId { get; set; }
+
+        public ReadingStatus? Status { get; set; }
+    }
+
+    // Remove Book form
+    public sealed class RemoveFormInput
+    {
+        [Range(1, int.MaxValue)]
+        public int ReadingListId { get; set; }
+    }
 }
+    
