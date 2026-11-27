@@ -1,0 +1,110 @@
+@page
+@model BookDetailsModel
+@using IS7024_GroupProject.Models
+
+@{
+    ViewData["Title"] = Model.Book?.Title ?? "Book Details";
+}
+
+@if (Model.Book is null)
+{
+    <div class="alert alert-warning" role="alert">That book could not be found.</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+    }
+
+    <article class="book-details">
+        <div class="book-details-cover">
+            @IndexModel.CreateCoverImage(Model.Book.CoverUrl, Model.Book.Title, "book-cover")
+        </div>
+
+        <div class="book-details-main">
+            <h1>@Model.Book.Title</h1>
+            <p class="book-author">@Model.Book.Author</p>
+            <p class="average-rating" aria-label="Average rating">
+                Average rating: @Model.AverageRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)
+                (@Model.RatingCount @(Model.RatingCount == 1 ? "rating" : "ratings")).
+            </p>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <section class="review-form" aria-labelledby="review-heading">
+                    <h2 id="review-heading">My rating and review</h2>
+
+                    @if (!Model.CanRate)
+                    {
+                        <p class="alert alert-info" role="status">Finish this book to rate it.</p>
+                    }
+
+                    <form method="post" asp-page-handler="SaveReview">
+                        <input type="hidden" asp-for="ReviewInput.BookId" />
+
+                        <fieldset class="mb-3" @(Model.CanRate ? null : "disabled")>
+                            <legend class="form-label mb-2">Rating</legend>
+                            <div class="rating-options" role="radiogroup" aria-label="Choose a rating">
+                                @for (int rating = 1; rating <= 5; rating++)
+                                {
+                                    <input type="radio"
+                                           asp-for="ReviewInput.Rating"
+                                           id="review-rating-@rating"
+                                           class="star-rating-input"
+                                           value="@rating"
+                                           checked="@(Model.ReviewInput.Rating == rating)" />
+                                    <label for="review-rating-@rating"
+                                           class="star-rating-label"
+                                           data-rating="@rating">
+                                        <svg class="star-rating-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path d="M12 2.25 14.93 8.2l6.57.96-4.75 4.63 1.12 6.55L12 17.25l-5.87 3.09 1.12-6.55L2.5 9.16l6.57-.96L12 2.25z" />
+                                        </svg>
+                                        <span class="visually-hidden">@rating @(rating == 1 ? "star" : "stars")</span>
+                                    </label>
+                                }
+                            </div>
+                            <span asp-validation-for="ReviewInput.Rating" class="text-danger"></span>
+                        </fieldset>
+
+                        <div class="mb-3">
+                            <label asp-for="ReviewInput.Summary" class="form-label">Summary</label>
+                            <input asp-for="ReviewInput.Summary"
+                                   class="form-control"
+                                   maxlength="200"
+                                   disabled="@(!Model.CanRate)" />
+                            <span asp-validation-for="ReviewInput.Summary" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ReviewInput.Review" class="form-label">Comment</label>
+                            <textarea asp-for="ReviewInput.Review"
+                                      class="form-control"
+                                      rows="5"
+                                      maxlength="4000"
+                                      disabled="@(!Model.CanRate)"></textarea>
+                            <span asp-validation-for="ReviewInput.Review" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary"
+                                disabled="@(!Model.CanRate)">
+                            Save
+                        </button>
+                    </form>
+                </section>
+            }
+            else
+            {
+                <p>
+                    <a asp-area="Identity" asp-page="/Account/Login">Sign in</a>
+                    to rate this book after finishing it.
+                </p>
+            }
+        </div>
+    </article>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

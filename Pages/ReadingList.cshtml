@@ -6,146 +6,131 @@
     ViewData["Title"] = "My Reading List";
 }
 
-<h1 class="mb-4">My Reading List</h1>
+<div class="reading-list-page">
+    <header class="reading-list-header">
+        <p class="eyebrow">Your collection</p>
+        <h1>My Reading List</h1>
+    </header>
 
-@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
-{
-    <div class="alert alert-success" role="status">
-        @Model.StatusMessage
-    </div>
-}
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-success" role="status">
+            @Model.StatusMessage
+        </div>
+    }
 
-<h2 class="mb-3">Books</h2>
+    <h2 class="reading-list-section-title">Books</h2>
 
-@if (Model.Entries.Count == 0)
-{
-    <div class="alert alert-info">
-        Your list is empty.
-        <a asp-page="/Index">Search for a book</a>
-        to get started.
-    </div>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @if (Model.Entries.Count == 0)
+    {
+        <div class="empty-state">
+            Your list is empty.
+            <a asp-page="/Index">Search for a book</a>
+            to get started.
+        </div>
+    }
+    else
+    {
+        <div class="reading-list-grid">
+            @foreach (var entry in Model.Entries)
+            {
+                <article class="reading-list-card">
+                    <div class="reading-list-cover">
+                        @IndexModel.CreateCoverImage(
+                            entry.Book.CoverUrl,
+                            entry.Book.Title,
+                            "reading-list-cover-image")
+                    </div>
 
-        @foreach (var entry in Model.Entries)
-        {
-            <div class="col">
-                <article class="card h-100 shadow-sm">
-                    <div class="row g-0 h-100">
+                    <div class="reading-list-card-body">
+                        <h3 class="reading-list-book-title">
+                            <a asp-page="/BookDetails"
+                               asp-route-id="@entry.BookId">
+                                @entry.Book.Title
+                            </a>
+                        </h3>
 
-                        <!-- Book Cover -->
-                        <div class="col-4">
-                            @IndexModel.CreateCoverImage(
-                                entry.Book.CoverUrl,
-                                entry.Book.Title,
-                                "img-fluid rounded-start book-cover")
-                        </div>
+                        <p class="reading-list-author">@entry.Book.Author</p>
 
-                        <div class="col-8">
-                            <div class="card-body">
-
-                                <!-- Book Details -->
-                                <h3 class="card-title h5">
-                                    @entry.Book.Title
-                                </h3>
-
-                                <p class="card-text mb-1">
-                                    @entry.Book.Author
-                                </p>
-
-                                <p class="card-text small text-muted">
-                                    Status: @(entry.Status switch
-                                    {
-                                        ReadingStatus.WantToRead => "Want to Read",
-                                        ReadingStatus.Reading => "Reading",
-                                        ReadingStatus.Finished => "Finished",
-                                        _ => entry.Status.ToString()
-                                    })
-                                </p>
-
-                                <!-- Update Reading Status -->
-                                <form method="post"
-                                      asp-page-handler="UpdateStatus"
-                                      class="mt-3">
-
-                                    <input type="hidden"
-                                           name="StatusInput.ReadingListId"
-                                           value="@entry.ReadingListId" />
-
-                                    <label for="status-@entry.ReadingListId"
-                                           class="form-label">
-                                        Reading status
-                                    </label>
-
-                                    <select name="StatusInput.Status"
-                                            id="status-@entry.ReadingListId"
-                                            class="form-select"
-                                            aria-label="Reading status for @entry.Book.Title">
-
-                                        <option value="WantToRead"
-                                                selected="@(entry.Status == ReadingStatus.WantToRead)">
-                                            Want to Read
-                                        </option>
-
-                                        <option value="Reading"
-                                                selected="@(entry.Status == ReadingStatus.Reading)">
-                                            Reading
-                                        </option>
-
-                                        <option value="Finished"
-                                                selected="@(entry.Status == ReadingStatus.Finished)">
-                                            Finished
-                                        </option>
-
-                                    </select>
-
-                                    <span asp-validation-for="StatusInput.Status"
-                                          class="text-danger"></span>
-
-                                    <button type="submit"
-                                            class="btn btn-primary btn-sm mt-2">
-                                        Save status
-                                    </button>
-                                </form>
-
-                                <!-- Finished Date -->
-                                @if (entry.FinishedDate is not null)
+                        <p class="reading-list-status">
+                            Status:
+                            <span>
+                                @(entry.Status switch
                                 {
-                                    <p class="card-text small text-muted mt-2">
-                                        Finished:
-                                        @entry.FinishedDate.Value.ToString("d")
-                                    </p>
-                                }
+                                    ReadingStatus.WantToRead => "Want to Read",
+                                    ReadingStatus.Reading => "Reading",
+                                    ReadingStatus.Finished => "Finished",
+                                    _ => entry.Status.ToString()
+                                })
+                            </span>
+                        </p>
 
-                                <!-- Remove Book -->
-                                <form method="post"
-                                      asp-page-handler="Remove"
-                                      class="mt-2"
-                                      onsubmit="return confirm('Remove this book from your list?');">
+                        <form method="post"
+                              asp-page-handler="UpdateStatus"
+                              class="reading-list-status-form">
+                            <input type="hidden"
+                                   name="StatusInput.ReadingListId"
+                                   value="@entry.ReadingListId" />
 
-                                    <input type="hidden"
-                                           name="RemoveInput.ReadingListId"
-                                           value="@entry.ReadingListId" />
+                            <label for="status-@entry.ReadingListId"
+                                   class="form-label">
+                                Reading status
+                            </label>
 
-                                    <button type="submit"
-                                            class="btn btn-outline-danger btn-sm"
-                                            aria-label="Remove @entry.Book.Title from your list">
-                                        Remove
-                                    </button>
-                                </form>
+                            <select name="StatusInput.Status"
+                                    id="status-@entry.ReadingListId"
+                                    class="form-select"
+                                    aria-label="Reading status for @entry.Book.Title">
+                                <option value="WantToRead"
+                                        selected="@(entry.Status == ReadingStatus.WantToRead)">
+                                    Want to Read
+                                </option>
+                                <option value="Reading"
+                                        selected="@(entry.Status == ReadingStatus.Reading)">
+                                    Reading
+                                </option>
+                                <option value="Finished"
+                                        selected="@(entry.Status == ReadingStatus.Finished)">
+                                    Finished
+                                </option>
+                            </select>
 
-                            </div>
-                        </div>
+                            <span asp-validation-for="StatusInput.Status"
+                                  class="text-danger"></span>
 
+                            <button type="submit"
+                                    class="btn btn-primary btn-sm mt-2">
+                                Save status
+                            </button>
+                        </form>
+
+                        @if (entry.FinishedDate is not null)
+                        {
+                            <p class="reading-list-finished-date">
+                                Finished @entry.FinishedDate.Value.ToString("d")
+                            </p>
+                        }
+
+                        <form method="post"
+                              asp-page-handler="Remove"
+                              class="reading-list-remove-form"
+                              onsubmit="return confirm('Remove this book from your list?');">
+                            <input type="hidden"
+                                   name="RemoveInput.ReadingListId"
+                                   value="@entry.ReadingListId" />
+
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    aria-label="Remove @entry.Book.Title from your list">
+                                Remove
+                            </button>
+                        </form>
                     </div>
                 </article>
-            </div>
-        }
-
-    </div>
-}
+            }
+        </div>
+    }
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
