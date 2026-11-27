@@ -32,6 +32,15 @@ public sealed class ReadingListPageTests
         Assert.Contains("FinishedDate", page);
     }
 
+    [Fact]
+    public void PageContract_LinksEachBookToBookDetails()
+    {
+        var page = File.ReadAllText(PagePath);
+
+        Assert.Contains("asp-page=\"/BookDetails\"", page);
+        Assert.Contains("asp-route-id=\"@entry.BookId\"", page);
+    }
+
     private static string FindPagePath()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
